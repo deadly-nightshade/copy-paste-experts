@@ -10,4 +10,3 @@ gensim==4.3.1
 open_clip_torch==2.20.0
 transformers==4.30.2
 protobuf==3.20.1
-IPython==8.14.0
