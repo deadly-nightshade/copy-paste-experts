@@ -246,6 +246,8 @@ def upload_page():
 
     #1.D. Display frames + slider
 
+    
+
 
 
 
