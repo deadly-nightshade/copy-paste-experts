@@ -7,3 +7,7 @@ torch==2.0.1
 opencv-python==4.7.0.72
 nltk==3.7
 gensim==4.3.1
+open_clip_torch==2.20.0
+transformers==4.30.2
+protobuf==3.20.1
+IPython==8.14.0
