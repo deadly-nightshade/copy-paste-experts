@@ -174,6 +174,22 @@ def sussometer(text, threshold=0.5): #threshold is required similarity to count
 
 
 
+
+
+
+
+# FRONTEND STUFF -----------------------------------------------------------------------------------------------------------------------------------------------
+
+#display everything 
+
+#1. Upload Video
+
+#1.A. Title
+
+#1.B. Sidebar
+
+#1.C. Upload Button
+
 #Now, the main website itself 
 
 # configs
@@ -186,21 +202,17 @@ if uploaded_file is not None:
     pass
     # DO SOMETHING TO VIDEO
 
-# (2) turn the video into image frames - if real-time, just get frame from video. 
+    # (2) turn the video into image frames - if real-time, just get frame from video. 
 
 
-# (3) do image captioning on each frame. Then, (6) generate the log 
+    # (3) do image captioning on each frame. Then, (6) generate the log 
 
 
-# (4) identify suspicious timestamps based on captions 
+    # (4) identify suspicious timestamps based on captions 
 
 
-# (5) generate a summary 
+    # (5) generate a summary 
 
 
-
-# FRONTEND STUFF -----------------------------------------------------------------------------------------------------------------------------------------------
-
-#display everything 
 
 
