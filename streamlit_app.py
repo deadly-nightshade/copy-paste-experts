@@ -41,21 +41,21 @@ st.set_page_config(
 @st.cache_data(persist=True, show_spinner=False)
 def getVideoFrames(vid, targetfps=1): 
     # video format is vid = cv2.VideoCapture('filename.mp4')
-    success, init = vid.read()
-    print(init.shape)
+    #success, init = vid.read()
+    #print(init.shape)
 
     fps = round(vid.get(cv2.CAP_PROP_FPS))
 
     imgs = [] 
 
     counter = fps 
-
+    c = 0 
     while vid.isOpened():
         success, img = vid.read()
         if not success:
             break
         if (counter >= fps): 
-            imgs.append(img) 
+            imgs.append([img, c]) 
             counter -= fps 
         counter += targetfps 
         
@@ -211,6 +211,9 @@ video_type = st.sidebar.selectbox("Choose footage input mode", ["Upload footage"
 
 
 #1. Upload Video
+if 'videoplayer' not in st.session_state: 
+    st.session_state['videoplayer'] = st.empty() 
+if 'current_video_time' not in st.session_state: 
 def upload_page():
 
     #imports
@@ -231,16 +234,21 @@ def upload_page():
     # (1) Take a video 
 
     st.header("App Name")
-    uploaded_file = st.file_uploader("Upload your video footage here!",type=["mp4"])
+    uploaded_file = st.file_uploader("Upload your video footage here!",type=["mp4"],accept_multiple_files=False)
     if uploaded_file is not None:
-        pass
         # DO SOMETHING TO VIDEO
 
         # (2) turn the video into image frames - if real-time, just get frame from video. 
 
+        #targetfps = 1 
+
+        temp = tempfile.namedTemporaryFile(delete=False) 
 
         # (3) do image captioning on each frame. Then, (6) generate the log 
 
+        c = 0
+        for caption_frame in st.session_state['img_caption_frames']: 
+            caption = image_to_caption(caption_frame) 
 
         # (4) identify suspicious timestamps based on captions 
 
@@ -254,16 +262,17 @@ def upload_page():
 
     #1.D. Display frames + slider
 
+    st.session_state['current_video_time'] = round(st.slider("Video time: ", 0.0, len(st.session_state['captions']) / st.session_state['targetfps'], 1/st.session_state['targetfps']) / st.session_state['targetfps'])
+    updateVideo() 
 
     # TEST UPLOADING IMAGE AND SEE IF IMAGE TO CAPTION WORKS
-image_uploader = st.file_uploader("image", type=["jpg","jpeg","png","webp"])
-if image_uploader is not None:
-    image = Image.open(image_uploader)
-    st.write(image_to_caption(image, coca_model, coca_transform))
+    # search thing 
+    st.session_state['search'] = st.text_input("Search timetamp by keywords", value="")
+    updateSearch() 
 
 
     
-
+def updateVideo(): 
 
 
 
