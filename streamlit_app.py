@@ -19,11 +19,12 @@ from gensim.models import KeyedVectors
 from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
 from nltk.corpus import stopwords
+from transformers import pipeline
 
 # app
 # title and logo
 st.set_page_config(
-    page_title= "App Name", 
+    page_title= "Smart Surveillance", 
     page_icon="",
     layout = "centered",
     initial_sidebar_state = "auto"
@@ -65,32 +66,12 @@ def getVideoFrames(vid, targetfps=1):
 # (3) define function to do image captioning on each frame 
 
 @st.cache_resource
-def get_coca_model():
-    model, _, transform = open_clip.create_model_and_transforms(
-    model_name="coca_ViT-L-14",
-    pretrained="mscoco_finetuned_laion2B-s13B-b90k"
-    )
-    model.eval()
-    print(device)
-    return model, transform
+def get_model():
+    return pipeline(model="Salesforce/blip-image-captioning-large",device=0)
 
 
-device = "cuda" if torch.cuda.is_available() else "cpu"
-@st.cache_data
-def image_to_caption(_im, _model, _transform):  # input PIL image here
-    im = _im.convert("RGB")
-    im = _transform(im).unsqueeze(0)
-    
-    #if (device == "cuda"):
-        #im = im.to(device="cuda")
-        
-    
-    with torch.no_grad(), torch.cuda.amp.autocast():
-        generated = _model.generate(im)
-
-    caption = open_clip.decode(generated[0]).split("<end_of_text>")[0].replace("<start_of_text>", "")[:-2]
-    return caption
-
+def image_to_caption(_image, _model):
+    return _model(_image)[0]["generated_text"]
 
 # (4) define function to identify whether a timestamp is suspicious (naive bayes classifier) - sussometer 
 
@@ -198,7 +179,7 @@ def sussometer(text, threshold=0.5): #threshold is required similarity to count
 # FRONTEND STUFF -----------------------------------------------------------------------------------------------------------------------------------------------
 
 # GLOBAL VARIABLES
-coca_model, coca_transform = get_coca_model()
+blip_model = get_model()
 lemmatizer = WordNetLemmatizer()
 vectorizer = getVectorizer()
 #for the lists later: no. of blanks is number of topics because yes. Each topic is assigned a certain "id". 
@@ -284,7 +265,11 @@ def upload_page():
         # (5) generate a summary
 
 
-
+    # TEST IMAGE UPLOAD
+    image_uploader = st.file_uploader("Upload your test image here!",type=["jpg","jpeg","png","webp"],accept_multiple_files=False)
+    if image_uploader is not None:
+        image = Image.open(image_uploader)
+        st.write(image_to_caption(image, blip_model))
 
     #1.C. Display Summary + summary timestamp video
 
