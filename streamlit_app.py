@@ -185,60 +185,74 @@ def sussometer(text, threshold=0.5): #threshold is required similarity to count
 
 #display everything 
 
-#A. Icon
-
-#B. Sidebar
+video_type = st.sidebar.selectbox("Choose footage input mode", ["Upload footage", "Real-time footage"])
 
 #1. Upload Video
+def upload_page():
 
-#1.A. Title
+    #imports
+    import streamlit as st
+    import altair as alt
+    import pandas as pd
 
-#1.B. Upload Button
+    #1.A. Title
+    st.title("Surveillance footage upload")
+    
 
-#Now, the main website itself 
+    #1.B. Upload Button
 
-# configs
+    #Now, the main website itself 
 
-# (1) Take a video 
+    # configs
 
-st.header("App Name")
-uploaded_file = st.file_uploader("Upload your video footage here!",type=["mp4"])
-if uploaded_file is not None:
-    pass
-    # DO SOMETHING TO VIDEO
+    # (1) Take a video 
 
-    # (2) turn the video into image frames - if real-time, just get frame from video. 
+    st.header("App Name")
+    uploaded_file = st.file_uploader("Upload your video footage here!",type=["mp4"])
+    if uploaded_file is not None:
+        pass
+        # DO SOMETHING TO VIDEO
 
-
-    # (3) do image captioning on each frame. Then, (6) generate the log 
-
-
-    # (4) identify suspicious timestamps based on captions 
-
-
-    # (5) generate a summary 
-
+        # (2) turn the video into image frames - if real-time, just get frame from video. 
 
 
+        # (3) do image captioning on each frame. Then, (6) generate the log 
 
-#1.C. Display Summary + summary timestamp video
 
-#1.D. Display frames + slider
+        # (4) identify suspicious timestamps based on captions 
+
+
+        # (5) generate a summary 
+
+
+
+
+    #1.C. Display Summary + summary timestamp video
+
+    #1.D. Display frames + slider
 
 
 
 
 #2. Real-time Video
 
-#2.A. Title
+def realtime_page():
 
-#2.B. Real-time video access feature? (bluetooth?, wifi?)
+    #imports
+    import streamlit as st
+    import pandas as pd
+    import altair as alt
 
-#2.C. Suspicion Alert System
+    #2.A. Title
+    st.title("Real-time surveillance footage")
 
-#2.D. Display timestamps + timestamp video
+    #2.B. Real-time video access feature? (bluetooth?, wifi?)
 
-#2.E Display real time video feed
+    #2.C. Suspicion Alert System
+
+    #2.D. Display timestamps + timestamp video
+
+    #2.E Display real time video feed
 
 
 
