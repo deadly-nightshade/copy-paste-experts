@@ -225,7 +225,7 @@ def upload_page():
     import pandas as pd
 
     #1.A. Title
-    st.title("Surveillance footage upload")
+    st.write("Surveillance footage upload")
     
 
     #1.B. Upload Button
@@ -273,7 +273,7 @@ def realtime_page():
     import altair as alt
 
     #2.A. Title
-    st.title("Real-time surveillance footage")
+    st.write("Real-time surveillance footage")
 
     #2.B. Real-time video access feature? (bluetooth?, wifi?)
 
