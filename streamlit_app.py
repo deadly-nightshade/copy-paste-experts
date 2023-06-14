@@ -202,6 +202,8 @@ values = loadValues()
 
 video_type = st.sidebar.selectbox("Choose footage input mode", ["Upload footage", "Real-time footage"])
 
+
+
 #1. Upload Video
 def upload_page():
 
@@ -271,5 +273,12 @@ def realtime_page():
 
     #2.E Display real time video feed
 
+
+
+
+if video_type=="Upload footage":
+    upload_page()
+else:
+    realtime_page()
 
 
