@@ -1,4 +1,3 @@
-
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -63,33 +62,30 @@ def getVideoFrames(vid, targetfps=1):
     return imgs
 
 # (3) define function to do image captioning on each frame 
-device = "cuda" if torch.cuda.is_available() else "cpu"
 
 @st.cache_resource
 def get_coca_model():
-    
-    # Create a database session object that points to the URL.
     model, _, transform = open_clip.create_model_and_transforms(
     model_name="coca_ViT-L-14",
     pretrained="mscoco_finetuned_laion2B-s13B-b90k"
     )
-    if (device == "cuda"):
-        model.cuda().eval()
-    else:
-        model.eval()
+    model.eval()
     print(device)
     return model, transform
 
+
+device = "cuda" if torch.cuda.is_available() else "cpu"
 @st.cache_data
-def image_to_caption(im):  # input image here
-    im = im.convert("RGB")
-    if (device == "cuda"):
-        im = coca_transform(im).unsqueeze(0).cuda()
-    else:
-        im = coca_transform(im).unsqueeze(0)
+def image_to_caption(_im, _model, _transform):  # input PIL image here
+    im = _im.convert("RGB")
+    im = _transform(im).unsqueeze(0)
+    
+    #if (device == "cuda"):
+        #im = im.to(device="cuda")
+        
     
     with torch.no_grad(), torch.cuda.amp.autocast():
-        generated = coca_model.generate(im)
+        generated = _model.generate(im)
 
     caption = open_clip.decode(generated[0]).split("<end_of_text>")[0].replace("<start_of_text>", "")[:-2]
     return caption
@@ -249,7 +245,7 @@ def upload_page():
         # (4) identify suspicious timestamps based on captions 
 
 
-        # (5) generate a summary 
+        # (5) generate a summary
 
 
 
@@ -257,6 +253,14 @@ def upload_page():
     #1.C. Display Summary + summary timestamp video
 
     #1.D. Display frames + slider
+
+
+    # TEST UPLOADING IMAGE AND SEE IF IMAGE TO CAPTION WORKS
+image_uploader = st.file_uploader("image", type=["jpg","jpeg","png","webp"])
+if image_uploader is not None:
+    image = Image.open(image_uploader)
+    st.write(image_to_caption(image, coca_model, coca_transform))
+
 
     
 
