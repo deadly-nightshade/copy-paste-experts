@@ -77,7 +77,6 @@ def getVideoFrames(_vid, targetfps=1):
             imgs.append([img, c]) 
             counter -= fps 
         counter += targetfps 
-        
     return imgs
 
 # (3) define function to do image captioning on each frame 
@@ -256,7 +255,11 @@ def upload_page():
 
         c = 0
         for caption_frame in st.session_state['img_caption_frames']: 
-            caption = image_to_caption(caption_frame) 
+            # TODO show progress bar!
+
+            print(caption_frame)
+            PIL_image = Image.fromarray(caption_frame[0])
+            caption = image_to_caption(PIL_image, blip_model) 
             st.session_state['captions'].append(caption) 
             st.session_state['logs'].append([caption, c / st.session_state['targetfps'], c]) #caption, real time, frame number 
             c += 1 
@@ -264,6 +267,7 @@ def upload_page():
 
         # (4) identify suspicious timestamps based on captions 
 
+        st.write(st.session_state['logs'])
 
         # (5) generate a summary
 
