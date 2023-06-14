@@ -66,7 +66,8 @@ def getVideoFrames(_vid, targetfps=1):
 
 @st.cache_resource
 def get_model():
-    return pipeline(model="Salesforce/blip-image-captioning-large",device=0)
+    device = 0 if torch.cuda.is_available else -1
+    return pipeline(model="Salesforce/blip-image-captioning-large",device=device)
 
 
 def image_to_caption(_image, _model):
