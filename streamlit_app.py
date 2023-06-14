@@ -1,4 +1,4 @@
-
+import tempfile 
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -42,8 +42,8 @@ st.set_page_config(
 @st.cache_data(persist=True, show_spinner=False)
 def getVideoFrames(vid, targetfps=1): 
     # video format is vid = cv2.VideoCapture('filename.mp4')
-    success, init = vid.read()
-    print(init.shape)
+    #success, init = vid.read()
+    #print(init.shape)
 
     fps = round(vid.get(cv2.CAP_PROP_FPS))
 
@@ -215,6 +215,8 @@ video_type = st.sidebar.selectbox("Choose footage input mode", ["Upload footage"
 
 
 #1. Upload Video
+videoplayer = st.empty() 
+current_video_time = 0 
 def upload_page():
 
     #imports
@@ -235,15 +237,37 @@ def upload_page():
     # (1) Take a video 
 
     st.header("App Name")
-    uploaded_file = st.file_uploader("Upload your video footage here!",type=["mp4"])
+    uploaded_file = st.file_uploader("Upload your video footage here!",type=["mp4"],accept_multiple_files=False)
     if uploaded_file is not None:
-        pass
+        #pass
         # DO SOMETHING TO VIDEO
 
         # (2) turn the video into image frames - if real-time, just get frame from video. 
 
+        targetfps = 1 
+
+        temp = tempfile.namedTemporaryFile(delete=False) 
+        temp.write(uploaded_file.read()) 
+
+        vid = cv2.VideoCapture(temp.name)
+        img_caption_frames = getVideoFrames(vid, targetfps)
+
+        
+
+        vid = cv2.VideoCapture(temp.name) 
+        success, frame = vid.read() 
+        videoplayer.image(frame) 
+        current_video_time = 0 
 
         # (3) do image captioning on each frame. Then, (6) generate the log 
+
+        captions = [] 
+        logs = [] 
+        c = 0
+        for caption_frame in img_caption_frames: 
+            captions.append(image_to_caption(caption_frame)) 
+            logs.append([captions[-1], targetfps*c]) #caption, time 
+            c += 1 
 
 
         # (4) identify suspicious timestamps based on captions 
