@@ -17,6 +17,7 @@ from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
 from nltk.corpus import stopwords
 
+# app
 # title and logo
 st.set_page_config(
     page_title= "App Name", 
