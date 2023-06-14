@@ -50,13 +50,13 @@ def getVideoFrames(vid, targetfps=1):
     imgs = [] 
 
     counter = fps 
-
+    c = 0 
     while vid.isOpened():
         success, img = vid.read()
         if not success:
             break
         if (counter >= fps): 
-            imgs.append(img) 
+            imgs.append([img, c]) 
             counter -= fps 
         counter += targetfps 
         
@@ -215,8 +215,20 @@ video_type = st.sidebar.selectbox("Choose footage input mode", ["Upload footage"
 
 
 #1. Upload Video
-videoplayer = st.empty() 
-current_video_time = 0 
+if 'videoplayer' not in st.session_state: 
+    st.session_state['videoplayer'] = st.empty() 
+if 'current_video_time' not in st.session_state: 
+    st.session_state['current_video_time'] = 0 
+if 'img_caption_frames' not in st.session_state: 
+    st.session_state['img_caption_frames'] = [] 
+if 'captions' not in st.session_state: 
+    st.session_state['captions'] = [] 
+if 'logs' not in st.session_state: 
+    st.session_state['logs'] = [] 
+if 'targetfps' not in st.session_state: 
+    st.session_state['targetfps'] = 1 
+if 'search' not in st.session_state: 
+    st.session_state['search'] = 1 
 def upload_page():
 
     #imports
@@ -244,29 +256,28 @@ def upload_page():
 
         # (2) turn the video into image frames - if real-time, just get frame from video. 
 
-        targetfps = 1 
+        #targetfps = 1 
 
         temp = tempfile.namedTemporaryFile(delete=False) 
         temp.write(uploaded_file.read()) 
 
         vid = cv2.VideoCapture(temp.name)
-        img_caption_frames = getVideoFrames(vid, targetfps)
+        st.session_state['img_caption_frames'] = getVideoFrames(vid, st.session_state['targetfps'])
 
         
 
-        vid = cv2.VideoCapture(temp.name) 
-        success, frame = vid.read() 
-        videoplayer.image(frame) 
-        current_video_time = 0 
+        #vid = cv2.VideoCapture(temp.name) 
+        #success, frame = vid.read() 
+        
+        st.session_state['current_video_time'] = 0 
 
         # (3) do image captioning on each frame. Then, (6) generate the log 
 
-        captions = [] 
-        logs = [] 
         c = 0
-        for caption_frame in img_caption_frames: 
-            captions.append(image_to_caption(caption_frame)) 
-            logs.append([captions[-1], targetfps*c]) #caption, time 
+        for caption_frame in st.session_state['img_caption_frames']: 
+            caption = image_to_caption(caption_frame) 
+            st.session_state['captions'].append(caption) 
+            st.session_state['logs'].append([caption, c / st.session_state['targetfps'], c]) #caption, real time, frame number 
             c += 1 
 
 
@@ -282,15 +293,21 @@ def upload_page():
 
     #1.D. Display frames + slider
 
+    st.session_state['current_video_time'] = round(st.slider("Video time: ", 0, len(st.session_state['captions']) / st.session_state['targetfps'], 1/st.session_state['targetfps']) / st.session_state['targetfps'])
+    updateVideo() 
+
     # search thing 
-    search = st.text_input("Search timetamp by keywords", value="")
+    st.session_state['search'] = st.text_input("Search timetamp by keywords", value="")
+    updateSearch() 
 
     #do filter thingy 
 
     
+def updateVideo(): 
+    st.session_state['videoplayer'].image(st.session_state['frames'][st.session_state['current_video_time']]) 
 
-
-
+def updateSearch(): 
+    st.text('\n'.join([i for i in st.session_state['logs'] if i[0].contains(st.session_state['search'])]))
 
 #2. Real-time Video
 
