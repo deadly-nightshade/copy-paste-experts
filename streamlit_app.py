@@ -212,6 +212,12 @@ if uploaded_file is not None:
 
     # (5) generate a summary 
 
+#1.D. Display Summary + video @ summary location
+
+#1.E. Display frames + slider
+
+#1.F. 
+
 
 
 
