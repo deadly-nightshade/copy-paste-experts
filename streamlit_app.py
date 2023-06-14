@@ -40,19 +40,19 @@ st.set_page_config(
 # (2) define function to turn video into image frames, inputs are video (opencv format) and the time between frames (to be extracted) 
 
 @st.cache_data(persist=True, show_spinner=False)
-def getVideoFrames(vid, targetfps=1): 
+def getVideoFrames(_vid, targetfps=1): 
     # video format is vid = cv2.VideoCapture('filename.mp4')
     #success, init = vid.read()
     #print(init.shape)
 
-    fps = round(vid.get(cv2.CAP_PROP_FPS))
+    fps = round(_vid.get(cv2.CAP_PROP_FPS))
 
     imgs = [] 
 
     counter = fps 
     c = 0 
-    while vid.isOpened():
-        success, img = vid.read()
+    while _vid.isOpened():
+        success, img = _vid.read()
         if not success:
             break
         if (counter >= fps): 
@@ -255,7 +255,7 @@ def upload_page():
 
         #targetfps = 1 
 
-        temp = tempfile.namedTemporaryFile(delete=False) 
+        temp = tempfile.NamedTemporaryFile(delete=False) 
         temp.write(uploaded_file.read()) 
 
         vid = cv2.VideoCapture(temp.name)
@@ -284,7 +284,10 @@ def upload_page():
         # (5) generate a summary
 
 
+        playVideoPage() 
 
+
+def playVideoPage(): 
 
     #1.C. Display Summary + summary timestamp video
 
@@ -311,7 +314,7 @@ def upload_page():
 
     
 def updateVideo(): 
-    st.session_state['videoplayer'].image(st.session_state['frames'][st.session_state['current_video_time']]) 
+    st.session_state['videoplayer'].image(st.session_state['img_caption_frames'][st.session_state['current_video_time']]) 
 
 def updateSearch(): 
     st.text('\n'.join([i for i in st.session_state['logs'] if i[0].contains(st.session_state['search'])]))
