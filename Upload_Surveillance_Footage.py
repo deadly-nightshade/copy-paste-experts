@@ -29,6 +29,24 @@ st.set_page_config(
     initial_sidebar_state = "auto"
     )
 
+# ALL SESSION STATES
+if 'videoplayer' not in st.session_state: 
+    st.session_state['videoplayer'] = st.empty() 
+if 'current_video_time' not in st.session_state: 
+    st.session_state['current_video_time'] = 0 
+if 'img_caption_frames' not in st.session_state: 
+    st.session_state['img_caption_frames'] = [] 
+if 'captions' not in st.session_state: 
+    st.session_state['captions'] = [] 
+if 'logs' not in st.session_state: 
+    st.session_state['logs'] = [] 
+if 'targetfps' not in st.session_state: 
+    st.session_state['targetfps'] = 1 
+if 'search' not in st.session_state: 
+    st.session_state['search'] = 1 
+if 'sussometer_threshold' not in st.session_state: 
+    st.session_state['sussometer_threshold'] = 0.5 
+
 
 #BACKEND STUFF ---------------------------------------------------------------------------------------------------------------------------------------------
 # The following comments have bracket corresponding to the tep numbers in the workflow in the google docs 
@@ -68,7 +86,6 @@ def getVideoFrames(_vid, targetfps=1):
 def get_model():
     device = 0 if torch.cuda.is_available else -1
     return pipeline(model="Salesforce/blip-image-captioning-large",device=device)
-
 
 def image_to_caption(_image, _model):
     return _model(_image)[0]["generated_text"]
@@ -192,22 +209,7 @@ video_type = st.sidebar.selectbox("Choose footage input mode", ["Upload footage"
 
 
 #1. Upload Video
-if 'videoplayer' not in st.session_state: 
-    st.session_state['videoplayer'] = st.empty() 
-if 'current_video_time' not in st.session_state: 
-    st.session_state['current_video_time'] = 0 
-if 'img_caption_frames' not in st.session_state: 
-    st.session_state['img_caption_frames'] = [] 
-if 'captions' not in st.session_state: 
-    st.session_state['captions'] = [] 
-if 'logs' not in st.session_state: 
-    st.session_state['logs'] = [] 
-if 'targetfps' not in st.session_state: 
-    st.session_state['targetfps'] = 1 
-if 'search' not in st.session_state: 
-    st.session_state['search'] = 1 
-if 'sussometer_threshold' not in st.session_state: 
-    st.session_state['sussometer_threshold'] = 0.5 
+
 def upload_page():
 
     #imports
