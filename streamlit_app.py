@@ -12,6 +12,7 @@ import nltk
 nltk.download('stopwords')
 nltk.download('punkt')
 nltk.download('omw-1.4')
+nltk.download('wordnet')
 from gensim.models import KeyedVectors 
 from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
@@ -102,10 +103,15 @@ for x in range(len(rawData)):
     #values += temp2
     values += filtertext(rawData[x].strip()) 
 
-#Load pre-trained Word2Vec model
-print("Loading vectorizer... (This is usually the longest step)") 
-vectorizer = KeyedVectors.load_word2vec_format('vectorizer.bin', binary=True)
-#vectorizer = pipeline("vectorizer", model="fse/word2vec-google-news-300")
+@st.cache_resource
+def getVectorizer(): 
+    #Load pre-trained Word2Vec model
+    print("Loading vectorizer... (This is usually the longest step)") 
+    vectorizer = KeyedVectors.load_word2vec_format('vectorizer.bin', binary=True)
+    #vectorizer = pipeline("vectorizer", model="fse/word2vec-google-news-300")
+    return vectorizer 
+
+vectorizer = getVectorizer()
 
 # Calculate the vector representation for the keywords
 print("Loading vectors... ") 
