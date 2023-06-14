@@ -41,19 +41,19 @@ st.set_page_config(
 # (2) define function to turn video into image frames, inputs are video (opencv format) and the time between frames (to be extracted) 
 
 @st.cache_data(persist=True, show_spinner=False)
-def getVideoFrames(vid, targetfps=1): 
+def getVideoFrames(_vid, targetfps=1): 
     # video format is vid = cv2.VideoCapture('filename.mp4')
     #success, init = vid.read()
     #print(init.shape)
 
-    fps = round(vid.get(cv2.CAP_PROP_FPS))
+    fps = round(_vid.get(cv2.CAP_PROP_FPS))
 
     imgs = [] 
 
     counter = fps 
     c = 0 
-    while vid.isOpened():
-        success, img = vid.read()
+    while _vid.isOpened():
+        success, img = _vid.read()
         if not success:
             break
         if (counter >= fps): 
@@ -215,7 +215,7 @@ def upload_page():
     import pandas as pd
 
     #1.A. Title
-    st.write("Surveillance footage upload")
+    st.title("Surveillance footage upload")
     
 
     #1.B. Upload Button
@@ -236,7 +236,7 @@ def upload_page():
 
         #targetfps = 1 
 
-        temp = tempfile.namedTemporaryFile(delete=False) 
+        temp = tempfile.NamedTemporaryFile(delete=False) 
         temp.write(uploaded_file.read()) 
 
         vid = cv2.VideoCapture(temp.name)
@@ -265,13 +265,22 @@ def upload_page():
         # (5) generate a summary
 
 
-    # TEST IMAGE UPLOAD
-    image_uploader = st.file_uploader("Upload your test image here!",type=["jpg","jpeg","png","webp"],accept_multiple_files=False)
-    if image_uploader is not None:
-        image = Image.open(image_uploader)
-        st.write(image_to_caption(image, blip_model))
+        playVideoPage() 
+
+
+def playVideoPage(): 
 
     #1.C. Display Summary + summary timestamp video
+
+    tempSumm = Summary #this should be a string
+    tempSummTimestamps = SummaryTimestamps #this should be an array
+    st.header("Summary")
+    st.write(tempSumm)
+    st.header("Suspicious occurences timestamps")
+    for i in range(len(tempSummTimestamps)):
+        st.write(tempSummTimestamps[i])
+        #show video feed that starts 5 seconds b4 timestamp, and show brief summary of captions within the timeframe of plus-minus 10 seconds from timestamp
+
 
     #1.D. Display frames + slider
 
@@ -286,7 +295,7 @@ def upload_page():
 
     
 def updateVideo(): 
-    st.session_state['videoplayer'].image(st.session_state['frames'][st.session_state['current_video_time']]) 
+    st.session_state['videoplayer'].image(st.session_state['img_caption_frames'][st.session_state['current_video_time']]) 
 
 def updateSearch(): 
     st.text('\n'.join([i for i in st.session_state['logs'] if i[0].contains(st.session_state['search'])]))
@@ -301,15 +310,32 @@ def realtime_page():
     import altair as alt
 
     #2.A. Title
-    st.write("Real-time surveillance footage")
+    st.title("Real-time surveillance footage")
 
     #2.B. Real-time video access feature? (bluetooth?, wifi?)
+    if st.button("Connect real-time video feed"):
+        st.write("")
+        #st.write is just placeholder.
+        #Here we add the connection method and stuff
 
     #2.C. Suspicion Alert System
+    if sussometrics: #sussometrics is a bool that is true when something sus occurring
+        tempSumm = RTsummary #string of summary of what happened using captions at those few frames
+        st.warning(str("Something sussy!\n"+tempSumm))
 
     #2.D. Display timestamps + timestamp video
+    RTtempSumm = RTSummary #this should be a string
+    RTtempSummTimestamps = RTSummaryTimestamps #this should be an array
+    st.header("Summary")
+    st.write(RTtempSumm)
+    st.header("Suspicious occurences timestamps")
+    for i in range(len(RTtempSummTimestamps)):
+        st.write(RTtempSummTimestamps[i])
+        #show video feed that starts 5 seconds b4 timestamp, and show brief summary of captions within the timeframe of plus-minus 10 seconds from timestamp
+
 
     #2.E Display real time video feed
+    #yes.
 
 
 
