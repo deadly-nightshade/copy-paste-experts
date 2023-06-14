@@ -248,6 +248,11 @@ def upload_page():
 
     #1.D. Display frames + slider
 
+    # search thing 
+    search = st.text_input("Search timetamp by keywords", value="")
+
+    #do filter thingy 
+
     
 
 
