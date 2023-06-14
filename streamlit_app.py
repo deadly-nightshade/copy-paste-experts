@@ -91,7 +91,6 @@ def image_to_caption(im):  # input image here
 
 #initialize lemmatizer
 #print("Initializing lemmatizer and related functions... ") 
-lemmatizer = WordNetLemmatizer()
 
 #define filter text function using lemmatizer 
 @st.cache_data(persist=True, show_spinner=False)
@@ -108,24 +107,25 @@ def filtertext(text):
 
     return filtered_tokens 
 
-#for the lists later: no. of blanks is number of topics because yes. Each topic is assigned a certain "id". 
-letters = ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z']
 
 #read in data
-print("Loading model... ") 
-fl = open("sussometerData.csv", 'r') #will be formatted such that odd lines are location names and evens are tags 
-rawData = fl.readlines()
-fl.close()
+# print("Loading model... ") 
+@st.cache_data(persist=True, show_spinner=False)
+def loadValues(): 
+    fl = open("sussometerData.csv", 'r') #will be formatted such that odd lines are location names and evens are tags 
+    rawData = fl.readlines()
+    fl.close()
 
-#Load data and corresponding tags 
-values = [] 
-for x in range(len(rawData)):
-    #temp = rawData[x].split(',')
-    #temp2 = [] 
-    #for i in range(len(temp)):
-    #    temp2 += filtertext(temp[i].strip()) 
-    #values += temp2
-    values += filtertext(rawData[x].strip()) 
+    #Load data and corresponding tags 
+    values = [] 
+    for x in range(len(rawData)):
+        #temp = rawData[x].split(',')
+        #temp2 = [] 
+        #for i in range(len(temp)):
+        #    temp2 += filtertext(temp[i].strip()) 
+        #values += temp2
+        values += filtertext(rawData[x].strip()) 
+    return values 
 
 @st.cache_resource
 def getVectorizer(): 
@@ -134,25 +134,6 @@ def getVectorizer():
     vectorizer = KeyedVectors.load_word2vec_format('vectorizer.bin', binary=True)
     #vectorizer = pipeline("vectorizer", model="fse/word2vec-google-news-300")
     return vectorizer 
-
-vectorizer = getVectorizer()
-
-# Calculate the vector representation for the keywords
-print("Loading vectors... ") 
-keyword_vectors = []
-i = 0 
-while i < len(values):
-    try:
-        temp = vectorizer[values[i]]
-    except Exception as ex:
-        name = str(ex).split("'")[1]
-        values.remove(name)
-        print("Vectorizer doesn't contain", name)
-        continue
-    keyword_vectors.append(temp) 
-    i += 1 
-#keyword_vectors = [vectorizer[word] for word in taglookup]
-
 
 #print(locTags)
 print("Loading complete!") 
@@ -211,6 +192,11 @@ def sussometer(text, threshold=0.5): #threshold is required similarity to count
 
 # GLOBAL VARIABLES
 coca_model, coca_transform = get_coca_model()
+lemmatizer = WordNetLemmatizer()
+vectorizer = getVectorizer()
+#for the lists later: no. of blanks is number of topics because yes. Each topic is assigned a certain "id". 
+letters = ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z']
+values = loadValues() 
 
 #display everything 
 
