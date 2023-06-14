@@ -4,6 +4,9 @@ import pandas as pd
 import numpy as np
 from PIL import Image
 from torchvision import models, transforms
+import open_clip
+import torch
+from IPython.display import Image
 import torch
 import cv2
 pd.options.mode.chained_assignment = None
@@ -13,6 +16,7 @@ nltk.download('stopwords')
 nltk.download('punkt')
 nltk.download('omw-1.4')
 nltk.download('wordnet')
+nltk.download('wordnet') 
 from gensim.models import KeyedVectors 
 from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
@@ -179,6 +183,24 @@ def sussometer(text, threshold=0.5): #threshold is required similarity to count
 
 
 
+
+
+
+
+# FRONTEND STUFF -----------------------------------------------------------------------------------------------------------------------------------------------
+
+#display everything 
+
+#A. Icon
+
+#B. Sidebar
+
+#1. Upload Video
+
+#1.A. Title
+
+#1.B. Upload Button
+
 #Now, the main website itself 
 
 # configs
@@ -191,21 +213,38 @@ if uploaded_file is not None:
     pass
     # DO SOMETHING TO VIDEO
 
-# (2) turn the video into image frames - if real-time, just get frame from video. 
+    # (2) turn the video into image frames - if real-time, just get frame from video. 
 
 
-# (3) do image captioning on each frame. Then, (6) generate the log 
+    # (3) do image captioning on each frame. Then, (6) generate the log 
 
 
-# (4) identify suspicious timestamps based on captions 
+    # (4) identify suspicious timestamps based on captions 
 
 
-# (5) generate a summary 
+    # (5) generate a summary 
 
 
 
-# FRONTEND STUFF -----------------------------------------------------------------------------------------------------------------------------------------------
 
-#display everything 
+#1.C. Display Summary + summary timestamp video
+
+#1.D. Display frames + slider
+
+
+
+
+#2. Real-time Video
+
+#2.A. Title
+
+#2.B. Real-time video access feature? (bluetooth?, wifi?)
+
+#2.C. Suspicion Alert System
+
+#2.D. Display timestamps + timestamp video
+
+#2.E Display real time video feed
+
 
 
