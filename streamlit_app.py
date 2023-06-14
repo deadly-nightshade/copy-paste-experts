@@ -138,7 +138,7 @@ def word_similarities(target_word):
 
 #function to test this 
 @st.cache_data(persist=True, show_spinner=False)
-def sussometer(text, threshold=0.5): #threshold is required similarity to count 
+def sussometer(text, threshold=st.session_state['sussometer_threshold']): #threshold is required similarity to count 
     global training
     global data
     global freqs
@@ -212,6 +212,8 @@ if 'targetfps' not in st.session_state:
     st.session_state['targetfps'] = 1 
 if 'search' not in st.session_state: 
     st.session_state['search'] = 1 
+if 'sussometer_threshold' not in st.session_state: 
+    st.session_state['sussometer_threshold'] = 0.5 
 def upload_page():
 
     #imports
@@ -295,6 +297,9 @@ def playVideoPage():
     # search thing 
     st.session_state['search'] = st.text_input("Search timetamp by keywords", value="")
     updateSearch() 
+
+    #sussometer slides 
+    st.session_state['sussometer_threshold'] = st.slider("Sussometer threshold (suggest >= 0.5)", 0, 1, 0.05)
 
     #do filter thingy 
 
