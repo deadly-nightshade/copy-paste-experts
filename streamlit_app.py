@@ -6,8 +6,6 @@ from PIL import Image
 from torchvision import models, transforms
 import open_clip
 import torch
-from IPython.display import Image
-import torch
 import cv2
 pd.options.mode.chained_assignment = None
 import numpy as np
@@ -33,6 +31,8 @@ st.set_page_config(
 
 #BACKEND STUFF ---------------------------------------------------------------------------------------------------------------------------------------------
 # The following comments have bracket corresponding to the tep numbers in the workflow in the google docs 
+
+
 
 # First, do all the preprocessing + defining functions and stuff 
 
@@ -62,6 +62,26 @@ def getVideoFrames(vid, targetfps=1):
     return imgs
 
 # (3) define function to do image captioning on each frame 
+
+@st.cache_resource
+def get_coca_model():
+    # Create a database session object that points to the URL.
+    model, _, transform = open_clip.create_model_and_transforms(
+    model_name="coca_ViT-L-14",
+    pretrained="mscoco_finetuned_laion2B-s13B-b90k"
+    )
+    model.cuda().eval()
+    return model, transform
+
+@st.cache_data
+def image_to_caption(im):  # input image here
+    im = im.convert("RGB")
+    im = coca_transform(im).unsqueeze(0).cuda()
+    with torch.no_grad(), torch.cuda.amp.autocast():
+        generated = coca_model.generate(im)
+
+    caption = open_clip.decode(generated[0]).split("<end_of_text>")[0].replace("<start_of_text>", "")[:-2]
+    return caption
 
 
 # (4) define function to identify whether a timestamp is suspicious (naive bayes classifier) - sussometer 
@@ -182,6 +202,9 @@ def sussometer(text, threshold=0.5): #threshold is required similarity to count
 
 
 # FRONTEND STUFF -----------------------------------------------------------------------------------------------------------------------------------------------
+
+# GLOBAL VARIABLES
+coca_model, coca_transform = get_coca_model()
 
 #display everything 
 
