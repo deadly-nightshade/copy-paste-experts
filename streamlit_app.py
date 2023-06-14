@@ -191,6 +191,11 @@ values = loadValues()
 video_type = st.sidebar.selectbox("Choose footage input mode", ["Upload footage", "Real-time footage"])
 
 
+# TEST IMAGE CAPTIONING HERE!
+image_uploader = st.file_uploader("Upload your image caption here!", type=["jpg","png","jpeg","webp"])
+if image_uploader is not None:
+    image = Image.open(image_uploader)
+    st.write(image_to_caption(image,blip_model))
 
 #1. Upload Video
 if 'videoplayer' not in st.session_state: 
