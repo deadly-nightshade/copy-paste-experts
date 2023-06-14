@@ -8,8 +8,12 @@ import torch
 import cv2
 
 # title and logo
-st.title("App Name")
-# st.set_page_config(page_title= “Evoke Ex-Stream App”, page_icon=”evoke_logo.png”)
+st.set_page_config(
+    page_title= "App Name", 
+    page_icon="",
+    layout = "centered",
+    initial_sidebar_state = "auto"
+    )
 
 
 #BACKEND STUFF ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -54,10 +58,15 @@ def getVideoFrames(vid, targetfps=1):
 
 #Now, the main website itself 
 
+# configs
+
 # (1) Take a video 
 
-st.write("Upload your video here, or take a video from your webcam!")
-
+st.header("App Name")
+uploaded_file = st.file_uploader("Upload your video footage here!",type=["mp4"])
+if uploaded_file is not None:
+    pass
+    # DO SOMETHING TO VIDEO
 
 # (2) turn the video into image frames - if real-time, just get frame from video. 
 
