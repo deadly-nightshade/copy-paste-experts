@@ -7,6 +7,7 @@ from torchvision import models, transforms
 import torch
 import cv2
 
+# app
 # title and logo
 st.set_page_config(
     page_title= "App Name", 
