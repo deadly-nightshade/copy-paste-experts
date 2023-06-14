@@ -13,6 +13,7 @@ import nltk
 nltk.download('stopwords')
 nltk.download('punkt')
 nltk.download('omw-1.4')
+nltk.download('wordnet')
 nltk.download('wordnet') 
 from gensim.models import KeyedVectors 
 from nltk.tokenize import word_tokenize
@@ -126,10 +127,15 @@ for x in range(len(rawData)):
     #values += temp2
     values += filtertext(rawData[x].strip()) 
 
-#Load pre-trained Word2Vec model
-print("Loading vectorizer... (This is usually the longest step)") 
-vectorizer = KeyedVectors.load_word2vec_format('vectorizer.bin', binary=True)
-#vectorizer = pipeline("vectorizer", model="fse/word2vec-google-news-300")
+@st.cache_resource
+def getVectorizer(): 
+    #Load pre-trained Word2Vec model
+    print("Loading vectorizer... (This is usually the longest step)") 
+    vectorizer = KeyedVectors.load_word2vec_format('vectorizer.bin', binary=True)
+    #vectorizer = pipeline("vectorizer", model="fse/word2vec-google-news-300")
+    return vectorizer 
+
+vectorizer = getVectorizer()
 
 # Calculate the vector representation for the keywords
 print("Loading vectors... ") 
@@ -208,13 +214,15 @@ coca_model, coca_transform = get_coca_model()
 
 #display everything 
 
+#A. Icon
+
+#B. Sidebar
+
 #1. Upload Video
 
 #1.A. Title
 
-#1.B. Sidebar
-
-#1.C. Upload Button
+#1.B. Upload Button
 
 #Now, the main website itself 
 
@@ -239,12 +247,27 @@ if uploaded_file is not None:
 
     # (5) generate a summary 
 
-#1.D. Display Summary + video @ summary location
 
-#1.E. Display frames + slider
 
-#1.F. 
 
+#1.C. Display Summary + summary timestamp video
+
+#1.D. Display frames + slider
+
+
+
+
+#2. Real-time Video
+
+#2.A. Title
+
+#2.B. Real-time video access feature? (bluetooth?, wifi?)
+
+#2.C. Suspicion Alert System
+
+#2.D. Display timestamps + timestamp video
+
+#2.E Display real time video feed
 
 
 
