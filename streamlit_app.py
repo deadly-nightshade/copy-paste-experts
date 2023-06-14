@@ -63,21 +63,31 @@ def getVideoFrames(vid, targetfps=1):
     return imgs
 
 # (3) define function to do image captioning on each frame 
+device = "cuda" if torch.cuda.is_available() else "cpu"
 
 @st.cache_resource
 def get_coca_model():
+    
     # Create a database session object that points to the URL.
     model, _, transform = open_clip.create_model_and_transforms(
     model_name="coca_ViT-L-14",
     pretrained="mscoco_finetuned_laion2B-s13B-b90k"
     )
-    model.cuda().eval()
+    if (device == "cuda"):
+        model.cuda().eval()
+    else:
+        model.eval()
+    print(device)
     return model, transform
 
 @st.cache_data
 def image_to_caption(im):  # input image here
     im = im.convert("RGB")
-    im = coca_transform(im).unsqueeze(0).cuda()
+    if (device == "cuda"):
+        im = coca_transform(im).unsqueeze(0).cuda()
+    else:
+        im = coca_transform(im).unsqueeze(0)
+    
     with torch.no_grad(), torch.cuda.amp.autocast():
         generated = coca_model.generate(im)
 
