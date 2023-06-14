@@ -234,7 +234,7 @@ def upload_page():
     import pandas as pd
 
     #1.A. Title
-    st.write("Surveillance footage upload")
+    st.title("Surveillance footage upload")
     
 
     #1.B. Upload Button
@@ -288,6 +288,16 @@ def upload_page():
 
     #1.C. Display Summary + summary timestamp video
 
+    tempSumm = Summary #this should be a string
+    tempSummTimestamps = SummaryTimestamps #this should be an array
+    st.header("Summary")
+    st.write(tempSumm)
+    st.header("Suspicious occurences timestamps")
+    for i in range(len(tempSummTimestamps)):
+        st.write(tempSummTimestamps[i])
+        #show video feed that starts 5 seconds b4 timestamp, and show brief summary of captions within the timeframe of plus-minus 10 seconds from timestamp
+
+
     #1.D. Display frames + slider
 
     st.session_state['current_video_time'] = round(st.slider("Video time: ", 0.0, len(st.session_state['captions']) / st.session_state['targetfps'], 1/st.session_state['targetfps']) / st.session_state['targetfps'])
@@ -316,15 +326,32 @@ def realtime_page():
     import altair as alt
 
     #2.A. Title
-    st.write("Real-time surveillance footage")
+    st.title("Real-time surveillance footage")
 
     #2.B. Real-time video access feature? (bluetooth?, wifi?)
+    if st.button("Connect real-time video feed"):
+        st.write("")
+        #st.write is just placeholder.
+        #Here we add the connection method and stuff
 
     #2.C. Suspicion Alert System
+    if sussometrics: #sussometrics is a bool that is true when something sus occurring
+        tempSumm = RTsummary #string of summary of what happened using captions at those few frames
+        st.warning(str("Something sussy!\n"+tempSumm))
 
     #2.D. Display timestamps + timestamp video
+    RTtempSumm = RTSummary #this should be a string
+    RTtempSummTimestamps = RTSummaryTimestamps #this should be an array
+    st.header("Summary")
+    st.write(RTtempSumm)
+    st.header("Suspicious occurences timestamps")
+    for i in range(len(RTtempSummTimestamps)):
+        st.write(RTtempSummTimestamps[i])
+        #show video feed that starts 5 seconds b4 timestamp, and show brief summary of captions within the timeframe of plus-minus 10 seconds from timestamp
+
 
     #2.E Display real time video feed
+    #yes.
 
 
 
