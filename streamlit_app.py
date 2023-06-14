@@ -5,6 +5,7 @@ import numpy as np
 from PIL import Image
 from torchvision import models, transforms
 import torch
+import cv2
 
 # title and logo
 st.title("App Name")
@@ -18,6 +19,27 @@ st.title("App Name")
 
 # (2) define function to turn video into image frames, inputs are video (opencv format) and the time between frames (to be extracted) 
 
+def getVideoFrames(vid, targetfps=1): 
+    # video format is vid = cv2.VideoCapture('filename.mp4')
+    success, init = vid.read()
+    print(init.shape)
+
+    fps = round(vid.get(cv2.CAP_PROP_FPS))
+
+    imgs = [] 
+
+    counter = fps 
+
+    while vid.isOpened():
+        success, img = vid.read()
+        if not success:
+            break
+        if (counter >= fps): 
+            imgs.append(img) 
+            counter -= fps 
+        counter += targetfps 
+        
+    return imgs
 
 # (3) define function to do image captioning on each frame 
 
