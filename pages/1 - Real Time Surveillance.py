@@ -28,6 +28,13 @@ import os
 
 if 'captions' not in st.session_state: 
     st.session_state['captions'] = ""
+if 'search' not in st.session_state: 
+    st.session_state['search'] = 1 
+if 'sussometer_threshold' not in st.session_state: 
+    st.session_state['sussometer_threshold'] = 0.5 
+if 'search_results' not in st.session_state: 
+    st.session_state['search_results'] = [] 
+# i just added search ig 
 
 # ------------------------------------------- BACKEND ------------------------------------------
 @st.cache_resource
@@ -129,6 +136,14 @@ def sussometer(text, threshold=st.session_state['sussometer_threshold']): #thres
 
 
 #-------------------------------------------- FRONTEND -----------------------------------------
+blip_model = get_model()
+lemmatizer = WordNetLemmatizer()
+vectorizer = getVectorizer()
+#for the lists later: no. of blanks is number of topics because yes. Each topic is assigned a certain "id". 
+letters = ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z']
+values = loadValues() 
+
+
 blip_model = get_model()
 
 st.title("Webcam Live Feed")
