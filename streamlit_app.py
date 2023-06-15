@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 from PIL import Image
 from torchvision import models, transforms
+import open_clip
 import torch
 import cv2
 pd.options.mode.chained_assignment = None
@@ -18,37 +19,16 @@ from gensim.models import KeyedVectors
 from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
 from nltk.corpus import stopwords
-from transformers import pipeline
-openai_key = "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"
+openai_key = "OPENAIKEY"
 
 # app
 # title and logo
 st.set_page_config(
-    page_title= "Smart Surveillance", 
+    page_title= "App Name", 
     page_icon="",
-    layout = "wide",
+    layout = "centered",
     initial_sidebar_state = "auto"
     )
-
-main_col, search_col = st.columns([3, 1], gap='medium') 
-
-# ALL SESSION STATES
-if 'videoplayer' not in st.session_state: 
-    st.session_state['videoplayer'] = st.empty() 
-if 'current_video_time' not in st.session_state: 
-    st.session_state['current_video_time'] = 0 
-if 'img_caption_frames' not in st.session_state: 
-    st.session_state['img_caption_frames'] = [] 
-if 'captions' not in st.session_state: 
-    st.session_state['captions'] = [] 
-if 'logs' not in st.session_state: 
-    st.session_state['logs'] = [] 
-if 'targetfps' not in st.session_state: 
-    st.session_state['targetfps'] = 1 
-if 'search' not in st.session_state: 
-    st.session_state['search'] = 1 
-if 'sussometer_threshold' not in st.session_state: 
-    st.session_state['sussometer_threshold'] = 0.5 
 
 
 #BACKEND STUFF ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -60,7 +40,7 @@ if 'sussometer_threshold' not in st.session_state:
 
 # (2) define function to turn video into image frames, inputs are video (opencv format) and the time between frames (to be extracted) 
 
-# @st.cache_data(persist=True, show_spinner=False)
+@st.cache_data(persist=True, show_spinner=False)
 def getVideoFrames(_vid, targetfps=1): 
     # video format is vid = cv2.VideoCapture('filename.mp4')
     #success, init = vid.read()
@@ -80,18 +60,38 @@ def getVideoFrames(_vid, targetfps=1):
             imgs.append([img, c]) 
             counter -= fps 
         counter += targetfps 
+        
     return imgs
 
 # (3) define function to do image captioning on each frame 
 
 @st.cache_resource
-def get_model():
-    device = 0 if torch.cuda.is_available() else -1
+def get_coca_model():
+    model, _, transform = open_clip.create_model_and_transforms(
+    model_name="coca_ViT-L-14",
+    pretrained="mscoco_finetuned_laion2B-s13B-b90k"
+    )
+    model.eval()
     print(device)
-    return pipeline(model="Salesforce/blip-image-captioning-large",device=device)
+    return model, transform
 
-def image_to_caption(_image, _model):
-    return _model(_image)[0]["generated_text"]
+
+device = "cuda" if torch.cuda.is_available() else "cpu"
+@st.cache_data
+def image_to_caption(_im, _model, _transform):  # input PIL image here
+    im = _im.convert("RGB")
+    im = _transform(im).unsqueeze(0)
+    
+    #if (device == "cuda"):
+        #im = im.to(device="cuda")
+        
+    
+    with torch.no_grad(), torch.cuda.amp.autocast():
+        generated = _model.generate(im)
+
+    caption = open_clip.decode(generated[0]).split("<end_of_text>")[0].replace("<start_of_text>", "")[:-2]
+    return caption
+
 
 # (4) define function to identify whether a timestamp is suspicious (naive bayes classifier) - sussometer 
 
@@ -158,7 +158,7 @@ def word_similarities(target_word):
 
 #function to test this 
 @st.cache_data(persist=True, show_spinner=False)
-def sussometer(text, threshold=st.session_state['sussometer_threshold']): #threshold is required similarity to count 
+def sussometer(text, threshold=0.5): #threshold is required similarity to count 
     global training
     global data
     global freqs
@@ -190,18 +190,16 @@ def sussometer(text, threshold=st.session_state['sussometer_threshold']): #thres
 # (5) define function to generate a summary of the video; summarize every sussy period, and summarize unsussy part 
 
 
-# def writeSummary(captions):
 
-#     request = ""
-#     for caption in captions:
-        
+
+
 
 
 
 # FRONTEND STUFF -----------------------------------------------------------------------------------------------------------------------------------------------
 
 # GLOBAL VARIABLES
-blip_model = get_model()
+coca_model, coca_transform = get_coca_model()
 lemmatizer = WordNetLemmatizer()
 vectorizer = getVectorizer()
 #for the lists later: no. of blanks is number of topics because yes. Each topic is assigned a certain "id". 
@@ -213,8 +211,22 @@ values = loadValues()
 video_type = st.sidebar.selectbox("Choose footage input mode", ["Upload footage", "Real-time footage"])
 
 
-#1. Upload Video
 
+#1. Upload Video
+if 'videoplayer' not in st.session_state: 
+    st.session_state['videoplayer'] = st.empty() 
+if 'current_video_time' not in st.session_state: 
+    st.session_state['current_video_time'] = 0 
+if 'img_caption_frames' not in st.session_state: 
+    st.session_state['img_caption_frames'] = [] 
+if 'captions' not in st.session_state: 
+    st.session_state['captions'] = [] 
+if 'logs' not in st.session_state: 
+    st.session_state['logs'] = [] 
+if 'targetfps' not in st.session_state: 
+    st.session_state['targetfps'] = 1 
+if 'search' not in st.session_state: 
+    st.session_state['search'] = 1 
 def upload_page():
 
     #imports
@@ -260,22 +272,15 @@ def upload_page():
         # (3) do image captioning on each frame. Then, (6) generate the log 
 
         c = 0
-        progress_bar = st.progress(0, text="Loading frames from video. Please wait...")
         for caption_frame in st.session_state['img_caption_frames']: 
-            # TODO show progress bar!
-
-            PIL_image = Image.fromarray(caption_frame[0])
-            caption = image_to_caption(PIL_image, blip_model) 
-            print(caption)
+            caption = image_to_caption(caption_frame) 
             st.session_state['captions'].append(caption) 
             st.session_state['logs'].append([caption, c / st.session_state['targetfps'], c]) #caption, real time, frame number 
             c += 1 
-            progress_bar.progress(c/len(st.session_state['img_caption_frames']), text="Loading frames from video. Please wait...")
 
-        progress_bar.empty()
+
         # (4) identify suspicious timestamps based on captions 
 
-        st.write(st.session_state['logs'])
 
         # (5) generate a summary
 
@@ -302,29 +307,18 @@ def playVideoPage():
     st.session_state['current_video_time'] = round(st.slider("Video time: ", 0.0, len(st.session_state['captions']) / st.session_state['targetfps'], 1/st.session_state['targetfps']) / st.session_state['targetfps'])
     updateVideo() 
 
-
-def load_searchbar(): 
     # search thing 
     st.session_state['search'] = st.text_input("Search timetamp by keywords", value="")
-
-    #sussometer slider 
-    st.session_state['sussometer_threshold'] = st.slider("Sussometer threshold (suggest >= 0.5)", 0.0, 1.0, 0.05)
+    updateSearch() 
 
     #do filter thingy 
-    updateSearch() 
-    
 
     
 def updateVideo(): 
     st.session_state['videoplayer'].image(st.session_state['img_caption_frames'][st.session_state['current_video_time']]) 
 
 def updateSearch(): 
-    filtered = [] 
-    for f in st.session_state['logs']: 
-        if (st.session_state['search'] in f[0]) and (sussometer(f[0], st.session_state['sussometer_threshold']) > 0): 
-            filtered.append(f) 
-    #st.text('\n'.join([i for i in st.session_state['logs'] if i[0].contains(st.session_state['search'])]))
-    st.write(filtered) 
+    st.text('\n'.join([i for i in st.session_state['logs'] if i[0].contains(st.session_state['search'])]))
 
 #2. Real-time Video
 
@@ -365,11 +359,10 @@ def realtime_page():
 
 
 
-with main_col: 
-    if video_type=="Upload footage":
-        upload_page()
-    else:
-        realtime_page()
-with search_col: 
-    load_searchbar() 
+
+if video_type=="Upload footage":
+    upload_page()
+else:
+    realtime_page()
+
 
