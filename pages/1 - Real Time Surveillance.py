@@ -2,8 +2,29 @@ import cv2
 import streamlit as st
 import torch
 from PIL import Image
-from transformers import pipeline
 import time
+import tempfile 
+import pandas as pd
+import numpy as np
+from torchvision import models, transforms
+pd.options.mode.chained_assignment = None
+import numpy as np
+import nltk
+nltk.download('stopwords')
+nltk.download('punkt')
+nltk.download('omw-1.4')
+nltk.download('wordnet')
+nltk.download('wordnet') 
+from gensim.models import KeyedVectors 
+from nltk.tokenize import word_tokenize
+from nltk.stem import WordNetLemmatizer
+from nltk.corpus import stopwords
+from transformers import pipeline
+keyreader = open("apikey.txt", 'r') 
+openai_key = keyreader.readline().strip() 
+keyreader.close
+from datetime import timedelta
+import os
 
 if 'captions' not in st.session_state: 
     st.session_state['captions'] = ""
@@ -16,6 +37,95 @@ def get_model():
 
 def image_to_caption(_image, _model):
     return _model(_image)[0]["generated_text"]
+
+
+
+
+@st.cache_data(persist=True, show_spinner=False)
+def filtertext(text): 
+    new_tokens = [] 
+    for token in word_tokenize(text): 
+        new_tokens.append(lemmatizer.lemmatize(token))
+    
+    #assign to globally set stopwords to a local set
+    stop_words = set(stopwords.words('english')+[''])
+    
+    #filter the stopwords and non-alphanumeric characters from the token
+    filtered_tokens = [''.join(ch.lower() for ch in token if ch in letters) for token in new_tokens if not ''.join(ch for ch in token if ch in letters).lower() in stop_words]
+
+    return filtered_tokens 
+
+
+#read in data
+# print("Loading model... ") 
+@st.cache_data(persist=True, show_spinner=False)
+def loadValues(): 
+    fl = open("sussometerData.csv", 'r') #will be formatted such that odd lines are location names and evens are tags 
+    rawData = fl.readlines()
+    fl.close()
+
+    #Load data and corresponding tags 
+    values = [] 
+    for x in range(len(rawData)):
+        #temp = rawData[x].split(',')
+        #temp2 = [] 
+        #for i in range(len(temp)):
+        #    temp2 += filtertext(temp[i].strip()) 
+        #values += temp2
+        values += filtertext(rawData[x].strip()) 
+    return values 
+
+@st.cache_resource
+def getVectorizer(): 
+    #Load pre-trained Word2Vec model
+    print("Loading vectorizer... (This is usually the longest step)") 
+    vectorizer = KeyedVectors.load_word2vec_format('vectorizer.bin', binary=True)
+    #vectorizer = pipeline("vectorizer", model="fse/word2vec-google-news-300")
+    return vectorizer 
+
+#print(locTags)
+print("Loading complete!") 
+
+#define function to get word similarities 
+@st.cache_data(persist=True, show_spinner=False)
+def word_similarities(target_word):
+    distances = [] 
+    for v in values:
+        distances.append(vectorizer.similarity(target_word, v)) 
+    #distances = vectorizer.distances(target_word, values) #ordered based on orders of vocabulary it seems
+    #return (distances-np.min(distances))/(np.max(distances)-np.min(distances))
+    return distances 
+
+#function to test this 
+@st.cache_data(persist=True, show_spinner=False)
+def sussometer(text, threshold=st.session_state['sussometer_threshold']): #threshold is required similarity to count 
+    global training
+    global data
+    global freqs
+    t = filtertext(text)
+    count = 0 
+    #print(t)
+    for inword in t:
+        try:
+            scores = word_similarities(inword)
+            #print(inword)
+            #print(scores) 
+            c = 0 #count
+            try: 
+                #c *= (0.1+max(scores)) #to make sure it doesnt go to like 0
+                for idx in range(len(scores)):
+                    score = scores[idx]
+                    if score > threshold:
+                        c += 1
+                        #print(score, values[idx]) 
+            except:
+                pass 
+            count += c
+        except Exception as ex:
+            #word doesn't exist
+            pass
+    
+    return count 
 
 
 #-------------------------------------------- FRONTEND -----------------------------------------

@@ -19,7 +19,7 @@ from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
 from nltk.corpus import stopwords
 from transformers import pipeline
-openai_key = "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"
+openai_key = open("apikey.txt", 'r').readline().strip() 
 from datetime import timedelta
 import os
 
