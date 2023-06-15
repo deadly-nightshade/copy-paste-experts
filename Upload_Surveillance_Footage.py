@@ -222,14 +222,14 @@ def get_timestamp_from_seconds(sec):
 
 
 def genSummary(captions):
-    return "lol summary trust"
+
     keyreader = open("apikey.txt", 'r') 
     openai_key = keyreader.readline().strip() 
     keyreader.close
     
     import openai
 
-    context = "You are generating a summary of a video given a list of captions. In your reply, only state the summary and nothing else, revising it with each new prompt if required" 
+    messages = [{"role": "system", "content": "You are generating a summary of a video given a list of captions. In your reply, only state the summary and nothing else, revising it with each new prompt if required"}]
     request = "Create a summary in chronological order of this list of captions:\n"
     c = len(request) 
     incr = 0 
@@ -244,12 +244,15 @@ def genSummary(captions):
             c += incr
             i+=1
 			
-    # post the request 
-    res = post_request(request, context) 
-		
-    request = "Continuing the list of captions:\n"
-    c = len(request) 
-    general_summary = res 
+        # post the request 
+        messages.append({"role":"user", "content":request})
+        chat = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages=messages)
+        res = chat.choices[0].message.content
+        messages.append({"role":"assistant", "content":res})
+            
+        request = "Continuing the list of captions:\n"
+        c = len(request) 
+        general_summary = res 
 	
     if len(st.session_state['search_results']) == 0: 
         return (general_summary, "") 
@@ -258,7 +261,9 @@ def genSummary(captions):
     request = "Focus on the following frames in which suspicious events may have occurred. Group frames close to each other as the same activity;\nFrames " # global variable sus_frames = [] 
     for i in st.session_state['search_results']: 
         request += str(i) + ', ' 
-    sus_summary = post_request(request, context) 
+    messages.append({"role":"user", "content": request})
+    chat = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages=messages)
+    sus_summary = chat.choices[0].message.content
 	
     return (general_summary, sus_summary) 
 	
