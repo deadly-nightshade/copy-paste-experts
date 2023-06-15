@@ -226,7 +226,7 @@ def get_timestamp_from_seconds(sec):
 def genSummary(captions):
 
     keyreader = open("apikey.txt", 'r') 
-    openai_key = keyreader.readline().strip() 
+    openai.api_key = keyreader.readline().strip() 
     keyreader.close
     
     import openai
