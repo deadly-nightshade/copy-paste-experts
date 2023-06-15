@@ -19,7 +19,7 @@ from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
 from nltk.corpus import stopwords
 from transformers import pipeline
-openai_key = "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"
+openai_key = open("apikey.txt", 'r').readline().strip() 
 from datetime import timedelta
 import os
 
@@ -390,7 +390,10 @@ def load_searchbar():
 
     #sussometer slider 
     st.session_state['sussometer_threshold'] = st.slider("Sussometer threshold (suggest >= 0.5)", 0.0, 1.0, 0.05)
-
+    
+    if 'search_res_display' not in st.session_state: 
+        st.session_state['search_res_display'] = st.empty() 
+    
     #do filter thingy 
     updateSearch() 
     
@@ -400,15 +403,17 @@ def updateVideo():
     st.session_state['videoplayer'].image(st.session_state['img_caption_frames'][st.session_state['current_video_time']]) 
 
 def updateSearch(): 
-    filtered = [] 
-    numbers = [] 
-    for f in st.session_state['logs']: 
-        if (st.session_state['search'] in f[0]) and (sussometer(f[0], st.session_state['sussometer_threshold']) > 0): 
-            filtered.append(f) 
-            numbers.append(f[2])
-    #st.text('\n'.join([i for i in st.session_state['logs'] if i[0].contains(st.session_state['search'])]))
-    st.session_state['search_results'] = numbers 
-    st.write(filtered) 
+    st.session_state['search_res_display'].empty() 
+    with st.session_state['search_res_display']: 
+        filtered = [] 
+        numbers = [] 
+        for f in st.session_state['logs']: 
+            if (st.session_state['search'] in f[0]) and (sussometer(f[0], st.session_state['sussometer_threshold']) > 0): 
+                filtered.append(f) 
+                numbers.append(f[2])
+        #st.text('\n'.join([i for i in st.session_state['logs'] if i[0].contains(st.session_state['search'])]))
+        st.session_state['search_results'] = numbers 
+        st.write(filtered) 
 
 
 with main_col: 
