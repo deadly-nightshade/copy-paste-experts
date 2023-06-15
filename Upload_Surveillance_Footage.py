@@ -69,7 +69,6 @@ if 'video_filename' not in st.session_state:
 def getVideoFrames(_vid, targetfps=1): 
     # video format is vid = cv2.VideoCapture('filename.mp4')
     #success, init = vid.read()
-    #print(init.shape)
 
     fps = round(_vid.get(cv2.CAP_PROP_FPS))
 
@@ -103,7 +102,6 @@ def image_to_caption(_image, _model):
 #loading stuff
 
 #initialize lemmatizer
-#print("Initializing lemmatizer and related functions... ") 
 
 #define filter text function using lemmatizer 
 @st.cache_data(persist=True, show_spinner=False)
@@ -122,7 +120,6 @@ def filtertext(text):
 
 
 #read in data
-# print("Loading model... ") 
 @st.cache_data(persist=True, show_spinner=False)
 def loadValues(): 
     fl = open("sussometerData.csv", 'r') #will be formatted such that odd lines are location names and evens are tags 
@@ -148,7 +145,6 @@ def getVectorizer():
     #vectorizer = pipeline("vectorizer", model="fse/word2vec-google-news-300")
     return vectorizer 
 
-#print(locTags)
 print("Loading complete!") 
 
 #define function to get word similarities 
@@ -385,7 +381,6 @@ def upload_page():
 
             generateDownloadButton()
 
-            print("I REACHED HERE!!!!!!!")
             displaySummary()
             playVideoPage() 
 
