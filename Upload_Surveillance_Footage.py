@@ -19,6 +19,8 @@ from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
 from nltk.corpus import stopwords
 from transformers import pipeline
+from datetime import timedelta
+import os
 
 # app
 # title and logo
@@ -46,7 +48,7 @@ if 'search' not in st.session_state:
     st.session_state['search'] = 1 
 if 'sussometer_threshold' not in st.session_state: 
     st.session_state['sussometer_threshold'] = 0.5 
-
+#os.environ['TRANSFORMERS_OFFLINE'] = 'yes'
 
 #BACKEND STUFF ---------------------------------------------------------------------------------------------------------------------------------------------
 # The following comments have bracket corresponding to the tep numbers in the workflow in the google docs 
@@ -83,7 +85,7 @@ def getVideoFrames(_vid, targetfps=1):
 
 @st.cache_resource
 def get_model():
-    device = 0 if torch.cuda.is_available else -1
+    device = 0 if torch.cuda.is_available() else -1
     return pipeline(model="Salesforce/blip-image-captioning-large",device=device)
 
 def image_to_caption(_image, _model):
@@ -186,10 +188,31 @@ def sussometer(text, threshold=st.session_state['sussometer_threshold']): #thres
 # (5) define function to generate a summary of the video; summarize every sussy period, and summarize unsussy part 
 
 
+# (6) define function to tidy up the camera logs from logs
+def generateLogs(logs, video_uploader, fps):
+    # logs is a 2D array, each inner array is [caption, real time count, frame number]
 
+    # 1st line - add video name, video total time, FPS used
+    video_total_time = logs[-1][1]  # in seconds
+    formatted_time = get_timestamp_from_seconds(video_total_time)
+    
+    formatted_logs = video_uploader.name + ", " + formatted_time + " , FPS used: " + str(fps) + "\n"
 
+    #LOG FORMAT
+    #TIMESTAMP
+    #Video time, fps used
+    #Frame 1  00:00  Caption
+    
+    for array in logs:
+        line = "Frame " + str(array[2]) + " " + get_timestamp_from_seconds(array[1]) + "  " + array[0] + "\n"
+        formatted_logs += line
 
+    return formatted_logs
 
+@st.cache_data(persist=True, show_spinner=False)
+def get_timestamp_from_seconds(sec):
+    td = timedelta(seconds=sec)
+    return str(timedelta(seconds=sec))
 
 
 # FRONTEND STUFF -----------------------------------------------------------------------------------------------------------------------------------------------
@@ -228,7 +251,6 @@ def upload_page():
 
     # (1) Take a video 
 
-    st.header("App Name")
     uploaded_file = st.file_uploader("Upload your video footage here!",type=["mp4"],accept_multiple_files=False)
     if uploaded_file is not None:
         #pass
@@ -267,9 +289,30 @@ def upload_page():
             progress_bar.progress(c/len(st.session_state['img_caption_frames']), text="Loading frames from video. Please wait...")
 
         progress_bar.empty()
-        # (4) identify suspicious timestamps based on captions 
 
-        st.write(st.session_state['logs'])
+        # (4.1) Generate Logs
+        logs = generateLogs(st.session_state['logs'], uploaded_file, st.session_state['targetfps'])
+        st.text(logs)
+
+        text_file_name = uploaded_file.name + ".txt"
+
+        #st.session_state['logs_file'] = tempfile.NamedTemporaryFile(prefix=text_file_name + " Logs_", suffix=".txt", delete=False)
+        #st.session_state['logs_file'].write(logs)
+
+        with open(text_file_name, 'w') as text_file:
+            text_file.write(logs)
+
+        st.download_button( 
+                label="Download the generated logs file as a txt",
+                data = open(text_file_name, 'r'),
+                file_name=text_file_name,
+                mime='text/txt',
+        )
+        
+        text_file.close()
+        # (4.2) identify suspicious timestamps based on captions 
+
+        #st.write(st.session_state['logs'])
 
         # (5) generate a summary
 
