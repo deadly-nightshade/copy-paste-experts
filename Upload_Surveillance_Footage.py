@@ -268,11 +268,6 @@ vectorizer = getVectorizer()
 letters = ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z']
 values = loadValues() 
 
-#display everything 
-
-video_type = st.sidebar.selectbox("Choose footage input mode", ["Upload footage", "Real-time footage"])
-
-
 #1. Upload Video
 
 def upload_page():
@@ -368,8 +363,8 @@ def playVideoPage():
 
     #1.C. Display Summary + summary timestamp video
 
-    tempSumm = Summary #this should be a string
-    tempSummTimestamps = SummaryTimestamps #this should be an array
+    tempSumm = genSummary(st.session_state['img_caption_frames']) #this should be a string
+    tempSummTimestamps = st.session_state['search_results'] #this should be an array
     st.header("Summary")
     st.write(tempSumm)
     st.header("Suspicious occurences timestamps")
@@ -410,50 +405,9 @@ def updateSearch():
     st.session_state['search_results'] = numbers 
     st.write(filtered) 
 
-#2. Real-time Video
-
-def realtime_page():
-
-    #imports
-    import streamlit as st
-    import pandas as pd
-    import altair as alt
-
-    #2.A. Title
-    st.title("Real-time surveillance footage")
-
-    #2.B. Real-time video access feature? (bluetooth?, wifi?)
-    if st.button("Connect real-time video feed"):
-        st.write("")
-        #st.write is just placeholder.
-        #Here we add the connection method and stuff
-
-    #2.C. Suspicion Alert System
-    if sussometrics: #sussometrics is a bool that is true when something sus occurring
-        tempSumm = RTsummary #string of summary of what happened using captions at those few frames
-        st.warning(str("Something sussy!\n"+tempSumm))
-
-    #2.D. Display timestamps + timestamp video
-    RTtempSumm = RTSummary #this should be a string
-    RTtempSummTimestamps = RTSummaryTimestamps #this should be an array
-    st.header("Summary")
-    st.write(RTtempSumm)
-    st.header("Suspicious occurences timestamps")
-    for i in range(len(RTtempSummTimestamps)):
-        st.write(RTtempSummTimestamps[i])
-        #show video feed that starts 5 seconds b4 timestamp, and show brief summary of captions within the timeframe of plus-minus 10 seconds from timestamp
-
-
-    #2.E Display real time video feed
-    #yes.
-
-
 
 with main_col: 
-    if video_type=="Upload footage":
-        upload_page()
-    else:
-        realtime_page()
+    upload_page()
 with search_col: 
     load_searchbar() 
 
