@@ -52,6 +52,8 @@ if 'similarity_threshold' not in st.session_state:
     st.session_state['similarity_threshold'] = 0.6 
 if 'search_results' not in st.session_state: 
     st.session_state['search_results'] = [] 
+if 'video_filename' not in st.session_state:
+    st.session_state['video_filename'] = ""
 #os.environ['TRANSFORMERS_OFFLINE'] = 'yes'
 
 #BACKEND STUFF ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -327,76 +329,58 @@ def upload_page():
 
     # (1) Take a video 
 
-    uploaded_file = st.file_uploader("Upload your video footage here!",type=["mp4"],accept_multiple_files=False)
+    uploaded_file = st.file_uploader("Upload your video footage here!",type=["mp4"],accept_multiple_files=False, key="uploaded_file")
     if uploaded_file is not None:
         #pass
         # DO SOMETHING TO VIDEO
+
+        if uploaded_file.name == st.session_state["video_filename"]:
+            generateDownloadButton()
+            displaySummary()
+            playVideoPage()
+        else:
 
         # (2) turn the video into image frames - if real-time, just get frame from video. 
 
         #targetfps = 1 
 
-        temp = tempfile.NamedTemporaryFile(delete=False) 
-        temp.write(uploaded_file.read()) 
+            st.session_state["video_filename"] = uploaded_file.name
 
-        vid = cv2.VideoCapture(temp.name)
-        st.session_state['img_caption_frames'] = getVideoFrames(vid, st.session_state['targetfps'])
+            temp = tempfile.NamedTemporaryFile(delete=False) 
+            temp.write(uploaded_file.read()) 
 
-        
+            vid = cv2.VideoCapture(temp.name)
+            st.session_state['img_caption_frames'] = getVideoFrames(vid, st.session_state['targetfps'])
 
-        #vid = cv2.VideoCapture(temp.name) 
-        #success, frame = vid.read() 
-        
-        st.session_state['current_video_time'] = 0 
+            
 
-        # (3) do image captioning on each frame. Then, (6) generate the log 
+            #vid = cv2.VideoCapture(temp.name) 
+            #success, frame = vid.read() 
+            
+            st.session_state['current_video_time'] = 0 
 
-        c = 0
-        progress_bar = st.progress(0, text="Loading frames from video. Please wait...")
-        for caption_frame in st.session_state['img_caption_frames']: 
-            # TODO show progress bar!
+            # (3) do image captioning on each frame. Then, (6) generate the log 
 
-            PIL_image = Image.fromarray(cv2.cvtColor(caption_frame[0], cv2.COLOR_BGR2RGB))
-            caption = image_to_caption(PIL_image, blip_model) 
-            print(caption)
-            st.session_state['captions'].append(caption) 
-            st.session_state['logs'].append([caption, c / st.session_state['targetfps'], c]) #caption, real time, frame number 
-            c += 1 
-            progress_bar.progress(c/len(st.session_state['img_caption_frames']), text="Loading frames from video. Please wait...")
+            c = 0
+            progress_bar = st.progress(0, text="Loading frames from video. Please wait...")
+            for caption_frame in st.session_state['img_caption_frames']: 
+                # TODO show progress bar!
 
-        progress_bar.empty()
+                PIL_image = Image.fromarray(caption_frame[0])
+                caption = image_to_caption(PIL_image, blip_model) 
+                print(caption)
+                st.session_state['captions'].append(caption) 
+                st.session_state['logs'].append([caption, c / st.session_state['targetfps'], c]) #caption, real time, frame number 
+                c += 1 
+                progress_bar.progress(c/len(st.session_state['img_caption_frames']), text="Loading frames from video. Please wait...")
 
-        # (4.1) Generate Logs
-        logs = generateLogs(st.session_state['logs'], uploaded_file, st.session_state['targetfps'])
-        st.text(logs)
+            progress_bar.empty()
 
-        print(st.session_state['logs'])
+            generateDownloadButton()
 
-        text_file_name = uploaded_file.name + ".txt"
-
-        #st.session_state['logs_file'] = tempfile.NamedTemporaryFile(prefix=text_file_name + " Logs_", suffix=".txt", delete=False)
-        #st.session_state['logs_file'].write(logs)
-
-        with open(text_file_name, 'w') as text_file:
-            text_file.write(logs)
-
-        st.download_button( 
-                label="Download the generated logs file as a txt",
-                data = open(text_file_name, 'r'),
-                file_name=text_file_name,
-                mime='text/txt',
-        )
-        
-        text_file.close()
-        # (4.2) identify suspicious timestamps based on captions 
-
-        #st.write(st.session_state['logs'])
-
-        # (5) generate a summary
-        
-
-        print("I REACHED HERE!!!!!!!")
-        playVideoPage() 
+            print("I REACHED HERE!!!!!!!")
+            displaySummary()
+            playVideoPage() 
 
 def susList(): 
     filtered = [] 
@@ -412,27 +396,53 @@ def susList():
     #st.text('\n'.join([i for i in st.session_state['logs'] if i[0].contains(st.session_state['search'])]))
     return numbers
 
-def playVideoPage(): 
+def generateDownloadButton():
 
+    # (4.1) Generate Logs
+    logs = generateLogs(st.session_state['logs'], st.session_state['uploaded_file'], st.session_state['targetfps'])
+    st.text(logs)
+
+    print(st.session_state['logs'])
+
+    text_file_name = st.session_state['uploaded_file'].name + ".txt"
+
+
+    with open(text_file_name, 'w') as text_file:
+        text_file.write(logs)
+
+    st.download_button( 
+        label="Download the generated logs file as a txt",
+        data = open(text_file_name, 'r'),
+        file_name=text_file_name,
+        mime='text/txt',
+    )
+            
+    text_file.close()
+
+def displaySummary():
     #1.C. Display Summary + summary timestamp video
+    print("111111111111111111111111111111111111111")
     tempSummTimestamps = susList() 
+    print("222222222222222222222222222222222222222")
     tempSumm = genSummary([i[0] for i in st.session_state['logs']], tempSummTimestamps) #this should be a string
+
     #tempSummTimestamps = st.session_state['search_results'] #this should be an array
     st.header("Summary")
     st.write(tempSumm[0])
     st.write(tempSumm[1])
     st.header("Suspicious occurences timestamps")
     for i in tempSummTimestamps:
-        st.write(st.session_state['logs'][i-1])
+        st.text(st.session_state['logs'][i-1])
         #show video feed that starts 5 seconds b4 timestamp, and show brief summary of captions within the timeframe of plus-minus 10 seconds from timestamp
 
-
+def playVideoPage(): 
+    
     #1.D. Display frames + slider
     if 'videoplayer' not in st.session_state: 
         st.session_state['videoplayer'] = st.empty() 
-
-    st.session_state['current_video_time'] = round(st.slider("Video time: ", 0.0, len(st.session_state['captions']) / st.session_state['targetfps'], 1/st.session_state['targetfps']) / st.session_state['targetfps'])
+    print("trying my best to RUN THIS REAL I MADE THE SLIDERRRR")
     updateVideo() 
+    st.session_state['current_video_time'] = round(st.slider("Video time: ", 0.0, len(st.session_state['captions']) / st.session_state['targetfps'], 1/st.session_state['targetfps']) / st.session_state['targetfps'])
 
 
 def load_searchbar(): 
@@ -479,7 +489,7 @@ def updateSearch():
         for f in st.session_state['logs']: 
             matched = False 
             for word in st.session_state['search'].split(): 
-                if word_sentence_similarities(word, f[0], st.session_state['similarity_threshold']): 
+                if word_similarities(word, f[0], st.session_state['similarity_threshold']): 
                     matched = True 
                     break 
             if matched and (sussometer(f[0], st.session_state['sussometer_threshold']) > 0): 
