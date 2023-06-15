@@ -220,6 +220,41 @@ def get_timestamp_from_seconds(sec):
     td = timedelta(seconds=sec)
     return str(timedelta(seconds=sec))
 
+def genSummary(captions):
+	context = "You are generating a summary of a video given a list of captions. In your reply, only state the summary and nothing else, revising it with each new prompt if required" 
+	request = "Create a brief summary in chronological order of this list of captions:\n"
+	c = len(request) 
+	incr = 0 
+	i = 0 
+	res = "" 
+	while (i < len(captions)):
+		while (i < len(captions)):
+			incr = len(captions[i] + "\n") 
+			if (c+incr) > 1000: 
+				break 
+			request += captions[i] + '\n' 
+			c += incr 
+			i+=1
+			
+		# post the request 
+		res = post_request(request, context) 
+		
+		request = "Continuing the list of captions:\n"
+		c = len(request) 
+	general_summary = res 
+	
+	if len(st.session_state['search_results']) == 0: 
+		return (general_summary, "") 
+	
+	# now, you want it to focus on the suspicious ones 
+	request = "Focus on the following frames in which suspicious events may have occurred. Group frames close to each other as the same activity;\nFrames " # global variable sus_frames = [] 
+	for i in st.session_state['search_results']: 
+		request += str(i) + ', ' 
+	sus_summary = post_request(request, context) 
+	
+	return (general_summary, sus_summary) 
+	
+
 
 # FRONTEND STUFF -----------------------------------------------------------------------------------------------------------------------------------------------
 
