@@ -154,6 +154,7 @@ print("Loading complete!")
 def word_similarities(target_word):
     distances = [] 
     for v in loadValues():
+        print("sussometer word similarities", target_word, v) 
         distances.append(vectorizer.similarity(target_word, v)) 
     #distances = vectorizer.distances(target_word, values) #ordered based on orders of vocabulary it seems
     #return (distances-np.min(distances))/(np.max(distances)-np.min(distances))
@@ -167,12 +168,13 @@ def sussometer(text, threshold=st.session_state['sussometer_threshold']): #thres
     global data
     global freqs
     t = filtertext(text)
-    print(t)
+    print(t, threshold)
     count = 0 
-    print(t)
+    #print(t)
     for inword in t:
         try:
             scores = word_similarities(inword)
+            print(inword, scores)
             #print(inword)
             #print(scores) 
             c = 0 #count
@@ -461,7 +463,7 @@ def updateVideo():
         st.image(img) 
 
 def word_sentence_similarities(target_word, sentence, threshold):
-    for word in sentence:
+    for word in sentence.split():
         print("word sentence similarities:", target_word, word)
         if (vectorizer.similarity(target_word, word) >= threshold): 
             return True  
