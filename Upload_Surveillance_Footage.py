@@ -167,7 +167,7 @@ def sussometer(text, threshold=st.session_state['sussometer_threshold']): #thres
     global freqs
     t = filtertext(text)
     count = 0 
-    #print(t)
+    print(t)
     for inword in t:
         try:
             scores = word_similarities(inword)
