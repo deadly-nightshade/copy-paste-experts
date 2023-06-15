@@ -19,9 +19,6 @@ from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
 from nltk.corpus import stopwords
 from transformers import pipeline
-keyreader = open("apikey.txt", 'r') 
-openai_key = keyreader.readline().strip() 
-keyreader.close
 from datetime import timedelta
 import os
 
@@ -227,6 +224,10 @@ def get_timestamp_from_seconds(sec):
 
 
 def genSummary(captions):
+    keyreader = open("apikey.txt", 'r') 
+    openai_key = keyreader.readline().strip() 
+    keyreader.close
+    
     import openai
 
     context = "You are generating a summary of a video given a list of captions. In your reply, only state the summary and nothing else, revising it with each new prompt if required" 

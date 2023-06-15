@@ -20,9 +20,6 @@ from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
 from nltk.corpus import stopwords
 from transformers import pipeline
-keyreader = open("apikey.txt", 'r') 
-openai_key = keyreader.readline().strip() 
-keyreader.close
 from datetime import timedelta
 import os
 
@@ -136,6 +133,10 @@ def sussometer(text, threshold=st.session_state['sussometer_threshold']): #thres
 
 
 #-------------------------------------------- FRONTEND -----------------------------------------
+keyreader = open("apikey.txt", 'r') 
+openai_key = keyreader.readline().strip() 
+keyreader.close
+
 blip_model = get_model()
 lemmatizer = WordNetLemmatizer()
 vectorizer = getVectorizer()
