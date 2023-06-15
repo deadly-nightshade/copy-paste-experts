@@ -31,7 +31,7 @@ st.set_page_config(
     initial_sidebar_state = "auto"
     )
 
-main_col, search_col = st.columns([3, 1], gap='medium') 
+main_col, search_col = st.columns([3, 2], gap='medium') 
 
 # ALL SESSION STATES
 if 'current_video_time' not in st.session_state: 
@@ -48,6 +48,8 @@ if 'search' not in st.session_state:
     st.session_state['search'] = 1 
 if 'sussometer_threshold' not in st.session_state: 
     st.session_state['sussometer_threshold'] = 0.5 
+if 'similarity_threshold' not in st.session_state: 
+    st.session_state['similarity_threshold'] = 0.6 
 if 'search_results' not in st.session_state: 
     st.session_state['search_results'] = [] 
 #os.environ['TRANSFORMERS_OFFLINE'] = 'yes'
@@ -267,6 +269,11 @@ def genSummary(captions):
 	
     return (general_summary, sus_summary) 
 	
+def similar_meaning(query, sentence, threshold=0.6): 
+    for word in sentence:
+        if (vectorizer.similarity(query, word) >= threshold): 
+            return True 
+    return False 
 
 # FRONTEND STUFF -----------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -373,7 +380,7 @@ def playVideoPage():
 
     #1.C. Display Summary + summary timestamp video
 
-    tempSumm = genSummary(st.session_state['img_caption_frames']) #this should be a string
+    tempSumm = genSummary([i[0] for i in st.session_state['logs']]) #this should be a string
     tempSummTimestamps = st.session_state['search_results'] #this should be an array
     st.header("Summary")
     st.write(tempSumm)
@@ -396,8 +403,11 @@ def load_searchbar():
     st.session_state['search'] = st.text_input("Search timetamp by keywords", value="")
 
     #sussometer slider 
-    st.session_state['sussometer_threshold'] = st.slider("Sussometer threshold (suggest >= 0.5)", 0.0, 1.0, 0.05)
+    st.session_state['sussometer_threshold'] = st.slider("Sussometer threshold (suggest >= 0.5)", 0.0, 1.0, 0.5)
     
+    #similarity threshold
+    st.session_state['similarity_threshold'] = st.slider("Similarity threshold (1 is exact match)", 0.0, 1.0, 0.6)
+
     if 'search_res_display' not in st.session_state: 
         st.session_state['search_res_display'] = st.empty() 
     
@@ -417,7 +427,12 @@ def updateSearch():
         filtered = [] 
         numbers = [] 
         for f in st.session_state['logs']: 
-            if (st.session_state['search'] in f[0]) and (sussometer(f[0], st.session_state['sussometer_threshold']) > 0): 
+            matched = False 
+            for word in st.session_state['search'].split(): 
+                if word_similarities(word, f[0], st.session_state['similarity_threshold']): 
+                    matched = True 
+                    break 
+            if matched and (sussometer(f[0], st.session_state['sussometer_threshold']) > 0): 
                 filtered.append(f) 
                 numbers.append(f[2])
         #st.text('\n'.join([i for i in st.session_state['logs'] if i[0].contains(st.session_state['search'])]))
