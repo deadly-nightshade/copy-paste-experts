@@ -57,7 +57,7 @@ if 'sussometer_threshold' not in st.session_state:
 
 # (2) define function to turn video into image frames, inputs are video (opencv format) and the time between frames (to be extracted) 
 
-@st.cache_data(persist=True, show_spinner=False)
+# @st.cache_data(persist=True, show_spinner=False)
 def getVideoFrames(_vid, targetfps=1): 
     # video format is vid = cv2.VideoCapture('filename.mp4')
     #success, init = vid.read()
@@ -254,17 +254,19 @@ def upload_page():
         # (3) do image captioning on each frame. Then, (6) generate the log 
 
         c = 0
+        progress_bar = st.progress(0, text="Loading frames from video. Please wait...")
         for caption_frame in st.session_state['img_caption_frames']: 
             # TODO show progress bar!
 
-            print(caption_frame)
             PIL_image = Image.fromarray(caption_frame[0])
             caption = image_to_caption(PIL_image, blip_model) 
+            print(caption)
             st.session_state['captions'].append(caption) 
             st.session_state['logs'].append([caption, c / st.session_state['targetfps'], c]) #caption, real time, frame number 
             c += 1 
+            progress_bar.progress(c/len(st.session_state['img_caption_frames']), text="Loading frames from video. Please wait...")
 
-
+        progress_bar.empty()
         # (4) identify suspicious timestamps based on captions 
 
         st.write(st.session_state['logs'])
