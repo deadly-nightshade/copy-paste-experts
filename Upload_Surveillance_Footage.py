@@ -169,7 +169,7 @@ def sussometer(text, threshold=st.session_state['sussometer_threshold']): #thres
     t = filtertext(text)
     print(t)
     count = 0 
-    #print(t)
+    print(t)
     for inword in t:
         try:
             scores = word_similarities(inword)
@@ -354,7 +354,7 @@ def upload_page():
         for caption_frame in st.session_state['img_caption_frames']: 
             # TODO show progress bar!
 
-            PIL_image = Image.fromarray(caption_frame[0])
+            PIL_image = Image.fromarray(cv2.cvtColor(caption_frame[0], cv2.COLOR_BGR2RGB))
             caption = image_to_caption(PIL_image, blip_model) 
             print(caption)
             st.session_state['captions'].append(caption) 
@@ -413,9 +413,7 @@ def susList():
 def playVideoPage(): 
 
     #1.C. Display Summary + summary timestamp video
-    print("111111111111111111111111111111111111111")
     tempSummTimestamps = susList() 
-    print("222222222222222222222222222222222222222")
     tempSumm = genSummary([i[0] for i in st.session_state['logs']], tempSummTimestamps) #this should be a string
     #tempSummTimestamps = st.session_state['search_results'] #this should be an array
     st.header("Summary")
@@ -459,7 +457,7 @@ def updateVideo():
     with st.session_state['videoplayer']: 
         img  = st.session_state['img_caption_frames'][st.session_state['current_video_time']]
         print(img)
-        img = Image.fromarray(img[0]) 
+        img = Image.fromarray(cv2.cvtColor(img[0], cv2.COLOR_BGR2RGB))
         st.image(img) 
 
 def word_sentence_similarities(target_word, sentence, threshold):
