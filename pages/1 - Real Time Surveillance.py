@@ -45,6 +45,7 @@ def image_to_caption(_image, _model):
 
 
 
+#define filter text function using lemmatizer 
 @st.cache_data(persist=True, show_spinner=False)
 def filtertext(text): 
     new_tokens = [] 
@@ -91,27 +92,36 @@ def getVectorizer():
 print("Loading complete!") 
 
 #define function to get word similarities 
-@st.cache_data(persist=True, show_spinner=False)
+#@st.cache_data(persist=True, show_spinner=False)
 def word_similarities(target_word):
     distances = [] 
-    for v in values:
-        distances.append(vectorizer.similarity(target_word, v)) 
+    for v in loadValues():
+        try: 
+            #print("sussometer word similarities", target_word, v) 
+            distances.append(vectorizer.similarity(target_word, v)) 
+            #print(distances[-1])
+        except: 
+            pass 
     #distances = vectorizer.distances(target_word, values) #ordered based on orders of vocabulary it seems
     #return (distances-np.min(distances))/(np.max(distances)-np.min(distances))
+    #print(distances)
     return distances 
 
 #function to test this 
-@st.cache_data(persist=True, show_spinner=False)
+#@st.cache_data(persist=True, show_spinner=False)
 def sussometer(text, threshold=st.session_state['sussometer_threshold']): #threshold is required similarity to count 
+    print("Sussometer hehe")
     global training
     global data
     global freqs
     t = filtertext(text)
+    print(t, threshold)
     count = 0 
     #print(t)
     for inword in t:
         try:
             scores = word_similarities(inword)
+            print(inword, scores)
             #print(inword)
             #print(scores) 
             c = 0 #count
@@ -120,15 +130,18 @@ def sussometer(text, threshold=st.session_state['sussometer_threshold']): #thres
                 for idx in range(len(scores)):
                     score = scores[idx]
                     if score > threshold:
+                        print(inword, loadValues()[idx])
                         c += 1
                         #print(score, values[idx]) 
             except:
+                print("Error adding score")
                 pass 
             count += c
         except Exception as ex:
             #word doesn't exist
             pass
     
+    print("Sus value:", count)
     return count 
 
 
