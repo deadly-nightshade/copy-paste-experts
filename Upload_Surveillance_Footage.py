@@ -19,6 +19,7 @@ from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
 from nltk.corpus import stopwords
 from transformers import pipeline
+openai_key = "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"
 
 # app
 # title and logo
@@ -186,9 +187,11 @@ def sussometer(text, threshold=st.session_state['sussometer_threshold']): #thres
 # (5) define function to generate a summary of the video; summarize every sussy period, and summarize unsussy part 
 
 
+# def writeSummary(captions):
 
-
-
+#     request = ""
+#     for caption in captions:
+        
 
 
 
