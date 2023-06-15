@@ -156,10 +156,15 @@ print("Loading complete!")
 def word_similarities(target_word):
     distances = [] 
     for v in loadValues():
-        print("sussometer word similarities", target_word, v) 
-        distances.append(vectorizer.similarity(target_word, v)) 
+        try: 
+            #print("sussometer word similarities", target_word, v) 
+            distances.append(vectorizer.similarity(target_word, v)) 
+            #print(distances[-1])
+        except: 
+            pass 
     #distances = vectorizer.distances(target_word, values) #ordered based on orders of vocabulary it seems
     #return (distances-np.min(distances))/(np.max(distances)-np.min(distances))
+    #print(distances)
     return distances 
 
 #function to test this 
@@ -185,9 +190,11 @@ def sussometer(text, threshold=st.session_state['sussometer_threshold']): #thres
                 for idx in range(len(scores)):
                     score = scores[idx]
                     if score > threshold:
+                        print(inword, loadValues()[idx])
                         c += 1
                         #print(score, values[idx]) 
             except:
+                print("Error adding score")
                 pass 
             count += c
         except Exception as ex:
@@ -429,6 +436,7 @@ def displaySummary():
     #tempSummTimestamps = st.session_state['search_results'] #this should be an array
     st.header("Summary")
     st.write(tempSumm[0])
+    st.write("Note the following frame in which suspicious activities have occured:\n")
     st.write(tempSumm[1])
     st.header("Suspicious occurences timestamps")
     for i in tempSummTimestamps:
@@ -474,9 +482,13 @@ def updateVideo():
 
 def word_sentence_similarities(target_word, sentence, threshold):
     for word in sentence.split():
-        print("word sentence similarities:", target_word, word)
-        if (vectorizer.similarity(target_word, word) >= threshold): 
-            return True  
+        #print("word sentence similarities:", target_word, word)
+        try: 
+            if (vectorizer.similarity(target_word, word) >= threshold): 
+                print("Word sentence similarities match:", target_word, word)
+                return True  
+        except: 
+            print("word sentence similarities error:", target_word, word)
     #distances = vectorizer.distances(target_word, values) #ordered based on orders of vocabulary it seems
     #return (distances-np.min(distances))/(np.max(distances)-np.min(distances))
     return False 
@@ -489,7 +501,7 @@ def updateSearch():
         for f in st.session_state['logs']: 
             matched = False 
             for word in st.session_state['search'].split(): 
-                if word_similarities(word, f[0], st.session_state['similarity_threshold']): 
+                if word_sentence_similarities(word, f[0], st.session_state['similarity_threshold']): 
                     matched = True 
                     break 
             if matched and (sussometer(f[0], st.session_state['sussometer_threshold']) > 0): 
