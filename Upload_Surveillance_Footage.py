@@ -230,7 +230,7 @@ def genSummary(captions):
     import openai
 
     messages = [{"role": "system", "content": "You are generating a summary of a video given a list of captions. In your reply, only state the summary and nothing else, revising it with each new prompt if required"}]
-    request = "Create a summary in chronological order of this list of captions:\n"
+    request = "Create a brief summary in chronological order of this list of captions:\n"
     c = len(request) 
     incr = 0 
     i = 0 
