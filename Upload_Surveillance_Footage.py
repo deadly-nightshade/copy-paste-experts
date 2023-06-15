@@ -25,9 +25,11 @@ from transformers import pipeline
 st.set_page_config(
     page_title= "Smart Surveillance", 
     page_icon="",
-    layout = "centered",
+    layout = "wide",
     initial_sidebar_state = "auto"
     )
+
+main_col, search_col = st.columns([3, 1], gap='medium') 
 
 # ALL SESSION STATES
 if 'videoplayer' not in st.session_state: 
@@ -83,7 +85,8 @@ def getVideoFrames(_vid, targetfps=1):
 
 @st.cache_resource
 def get_model():
-    device = 0 if torch.cuda.is_available else -1
+    device = 0 if torch.cuda.is_available() else -1
+    print(device)
     return pipeline(model="Salesforce/blip-image-captioning-large",device=device)
 
 def image_to_caption(_image, _model):
@@ -296,21 +299,29 @@ def playVideoPage():
     st.session_state['current_video_time'] = round(st.slider("Video time: ", 0.0, len(st.session_state['captions']) / st.session_state['targetfps'], 1/st.session_state['targetfps']) / st.session_state['targetfps'])
     updateVideo() 
 
+
+def load_searchbar(): 
     # search thing 
     st.session_state['search'] = st.text_input("Search timetamp by keywords", value="")
-    updateSearch() 
 
-    #sussometer slides 
-    st.session_state['sussometer_threshold'] = st.slider("Sussometer threshold (suggest >= 0.5)", 0, 1, 0.05)
+    #sussometer slider 
+    st.session_state['sussometer_threshold'] = st.slider("Sussometer threshold (suggest >= 0.5)", 0.0, 1.0, 0.05)
 
     #do filter thingy 
+    updateSearch() 
+    
 
     
 def updateVideo(): 
     st.session_state['videoplayer'].image(st.session_state['img_caption_frames'][st.session_state['current_video_time']]) 
 
 def updateSearch(): 
-    st.text('\n'.join([i for i in st.session_state['logs'] if i[0].contains(st.session_state['search'])]))
+    filtered = [] 
+    for f in st.session_state['logs']: 
+        if (st.session_state['search'] in f[0]) and (sussometer(f[0], st.session_state['sussometer_threshold']) > 0): 
+            filtered.append(f) 
+    #st.text('\n'.join([i for i in st.session_state['logs'] if i[0].contains(st.session_state['search'])]))
+    st.write(filtered) 
 
 #2. Real-time Video
 
@@ -351,10 +362,11 @@ def realtime_page():
 
 
 
-
-if video_type=="Upload footage":
-    upload_page()
-else:
-    realtime_page()
-
+with main_col: 
+    if video_type=="Upload footage":
+        upload_page()
+    else:
+        realtime_page()
+with search_col: 
+    load_searchbar() 
 
