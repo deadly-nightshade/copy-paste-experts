@@ -221,34 +221,45 @@ def get_timestamp_from_seconds(sec):
     td = timedelta(seconds=sec)
     return str(timedelta(seconds=sec))
 
+def countTokens(text): 
+    import tiktoken
+    from tiktoken_ext.openai_public import ENCODING_CONSTRUCTORS 
+    encFunc = ENCODING_CONSTRUCTORS['gpt-4.5-turbo-16k']
+    encDict = encFunc() 
+    enc = tiktoken.Encoding(encDict['name'],
+         pat_str         = encDict['pat_str'        ],
+         mergeable_ranks = encDict['mergeable_ranks'],
+         special_tokens  = encDict['special_tokens' ])
+    return len(enc.encode(text))
 
-
-def genSummary(captions):
-
+def genSummary(captions, suslist):
+    print("Loading summary... ")
+    import openai
     keyreader = open("apikey.txt", 'r') 
     openai.api_key = keyreader.readline().strip() 
-    keyreader.close
-    
-    import openai
+    keyreader.close()
 
-    messages = [{"role": "system", "content": "You are generating a summary of a video given a list of captions. In your reply, only state the summary and nothing else, revising it with each new prompt if required"}]
+    messages = [{"role": "system", "content": "You are generating a brief summary of a video given a list of captions. In your reply, only state the summary and nothing else, revising it with each new prompt if required, but make sure to keep the content from previous replies, and summarize it briefly, removing unnecessary detail"}]
     request = "Create a brief summary in chronological order of this list of captions:\n"
     c = len(request) 
     incr = 0 
     i = 0 
     res = "" 
+    print(captions)
     while(i < len(captions)):
         while (i < len(captions)):
             incr = len(captions[i] + "\n") 
-            if (c+incr) > 1000: 
+            if (c+incr) > 2000: 
                 break 
             request += captions[i] + '\n' 
             c += incr
             i+=1
+            print(i)
+        print("Submitted:", c)
 			
         # post the request 
         messages.append({"role":"user", "content":request})
-        chat = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages=messages)
+        chat = openai.ChatCompletion.create(model="gpt-3.5-turbo-16k", messages=messages)
         res = chat.choices[0].message.content
         messages.append({"role":"assistant", "content":res})
             
@@ -256,17 +267,22 @@ def genSummary(captions):
         c = len(request) 
         general_summary = res 
 	
-    if len(st.session_state['search_results']) == 0: 
+    print("General summary:", general_summary)
+    
+    if len(suslist) == 0: 
+        print("No sus list :(")
         return (general_summary, "") 
 
     # now, you want it to focus on the suspicious ones 
     request = "Focus on the following frames in which suspicious events may have occurred. Group frames close to each other as the same activity;\nFrames " # global variable sus_frames = [] 
-    for i in st.session_state['search_results']: 
+    for i in suslist: 
         request += str(i) + ', ' 
     messages.append({"role":"user", "content": request})
-    chat = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages=messages)
+    chat = openai.ChatCompletion.create(model="gpt-3.5-turbo-16k", messages=messages)
     sus_summary = chat.choices[0].message.content
 	
+    print("Sus summary:", sus_summary)
+
     return (general_summary, sus_summary) 
 	
 def similar_meaning(query, sentence, threshold=0.6): 
@@ -349,6 +365,8 @@ def upload_page():
         logs = generateLogs(st.session_state['logs'], uploaded_file, st.session_state['targetfps'])
         st.text(logs)
 
+        print(st.session_state['logs'])
+
         text_file_name = uploaded_file.name + ".txt"
 
         #st.session_state['logs_file'] = tempfile.NamedTemporaryFile(prefix=text_file_name + " Logs_", suffix=".txt", delete=False)
@@ -372,21 +390,37 @@ def upload_page():
         # (5) generate a summary
         
 
-
+        print("I REACHED HERE!!!!!!!")
         playVideoPage() 
 
+def susList(): 
+    filtered = [] 
+    numbers = [] 
+    print("Generating sus list...")
+    print(st.session_state['logs'])
+    for f in st.session_state['logs']: 
+        print(f)
+        if (sussometer(f[0], 0.5) > 0): 
+            filtered.append(f) 
+            numbers.append(f[2])
+            print("Appended")
+    #st.text('\n'.join([i for i in st.session_state['logs'] if i[0].contains(st.session_state['search'])]))
+    return numbers
 
 def playVideoPage(): 
 
     #1.C. Display Summary + summary timestamp video
-
-    tempSumm = genSummary([i[0] for i in st.session_state['logs']]) #this should be a string
-    tempSummTimestamps = st.session_state['search_results'] #this should be an array
+    print("111111111111111111111111111111111111111")
+    tempSummTimestamps = susList() 
+    print("222222222222222222222222222222222222222")
+    tempSumm = genSummary([i[0] for i in st.session_state['logs']], tempSummTimestamps) #this should be a string
+    #tempSummTimestamps = st.session_state['search_results'] #this should be an array
     st.header("Summary")
-    st.write(tempSumm)
+    st.write(tempSumm[0])
+    st.write(tempSumm[1])
     st.header("Suspicious occurences timestamps")
-    for i in range(len(tempSummTimestamps)):
-        st.write(tempSummTimestamps[i])
+    for i in tempSummTimestamps:
+        st.write(st.session_state['logs'][i-1])
         #show video feed that starts 5 seconds b4 timestamp, and show brief summary of captions within the timeframe of plus-minus 10 seconds from timestamp
 
 
@@ -399,6 +433,7 @@ def playVideoPage():
 
 
 def load_searchbar(): 
+    print("Loading search bar")
     # search thing 
     st.session_state['search'] = st.text_input("Search timetamp by keywords", value="")
 
@@ -419,7 +454,9 @@ def load_searchbar():
 def updateVideo(): 
     st.session_state['videoplayer'].empty() 
     with st.session_state['videoplayer']: 
-        st.image(st.session_state['img_caption_frames'][st.session_state['current_video_time']]) 
+        img  = st.session_state['img_caption_frames'][st.session_state['current_video_time']]
+        img = Image.fromarray(img) 
+        st.image(img) 
 
 def updateSearch(): 
     st.session_state['search_res_display'].empty() 
