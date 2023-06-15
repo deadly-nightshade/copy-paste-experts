@@ -436,7 +436,7 @@ def displaySummary():
     #tempSummTimestamps = st.session_state['search_results'] #this should be an array
     st.header("Summary")
     st.write(tempSumm[0])
-    st.write("Note the following frame in which suspicious activities have occured:\n")
+    st.write("Note the following frame(s) in which suspicious activities have occured:\n")
     st.write(tempSumm[1])
     st.header("Suspicious occurences timestamps")
     for i in tempSummTimestamps:
@@ -482,7 +482,7 @@ def updateVideo():
 
 def word_sentence_similarities(target_word, sentence, threshold):
     for word in sentence.split():
-        #print("word sentence similarities:", target_word, word)
+        print("word sentence similarities:", target_word, word)
         try: 
             if (vectorizer.similarity(target_word, word) >= threshold): 
                 print("Word sentence similarities match:", target_word, word)
