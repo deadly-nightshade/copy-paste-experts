@@ -34,8 +34,6 @@ st.set_page_config(
 main_col, search_col = st.columns([3, 1], gap='medium') 
 
 # ALL SESSION STATES
-if 'videoplayer' not in st.session_state: 
-    st.session_state['videoplayer'] = st.empty() 
 if 'current_video_time' not in st.session_state: 
     st.session_state['current_video_time'] = 0 
 if 'img_caption_frames' not in st.session_state: 
@@ -224,6 +222,7 @@ def get_timestamp_from_seconds(sec):
 
 
 def genSummary(captions):
+    return "lol summary trust"
     keyreader = open("apikey.txt", 'r') 
     openai_key = keyreader.readline().strip() 
     keyreader.close
@@ -380,6 +379,8 @@ def playVideoPage():
 
 
     #1.D. Display frames + slider
+    if 'videoplayer' not in st.session_state: 
+        st.session_state['videoplayer'] = st.empty() 
 
     st.session_state['current_video_time'] = round(st.slider("Video time: ", 0.0, len(st.session_state['captions']) / st.session_state['targetfps'], 1/st.session_state['targetfps']) / st.session_state['targetfps'])
     updateVideo() 
@@ -401,7 +402,9 @@ def load_searchbar():
 
     
 def updateVideo(): 
-    st.session_state['videoplayer'].image(st.session_state['img_caption_frames'][st.session_state['current_video_time']]) 
+    st.session_state['videoplayer'].empty() 
+    with st.session_state['videoplayer']: 
+        st.image(st.session_state['img_caption_frames'][st.session_state['current_video_time']]) 
 
 def updateSearch(): 
     st.session_state['search_res_display'].empty() 
