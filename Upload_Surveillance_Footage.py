@@ -321,6 +321,7 @@ def upload_page():
         #st.write(st.session_state['logs'])
 
         # (5) generate a summary
+        
 
 
         playVideoPage() 
