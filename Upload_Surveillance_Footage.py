@@ -455,7 +455,8 @@ def updateVideo():
     st.session_state['videoplayer'].empty() 
     with st.session_state['videoplayer']: 
         img  = st.session_state['img_caption_frames'][st.session_state['current_video_time']]
-        img = Image.fromarray(img) 
+        print(img)
+        img = Image.fromarray(img[0]) 
         st.image(img) 
 
 def updateSearch(): 
