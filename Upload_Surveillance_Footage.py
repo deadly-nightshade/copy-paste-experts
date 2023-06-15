@@ -51,6 +51,8 @@ if 'search' not in st.session_state:
     st.session_state['search'] = 1 
 if 'sussometer_threshold' not in st.session_state: 
     st.session_state['sussometer_threshold'] = 0.5 
+if 'search_results' not in st.session_state: 
+    st.session_state['search_results'] = [] 
 #os.environ['TRANSFORMERS_OFFLINE'] = 'yes'
 
 #BACKEND STUFF ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -364,10 +366,13 @@ def updateVideo():
 
 def updateSearch(): 
     filtered = [] 
+    numbers = [] 
     for f in st.session_state['logs']: 
         if (st.session_state['search'] in f[0]) and (sussometer(f[0], st.session_state['sussometer_threshold']) > 0): 
             filtered.append(f) 
+            numbers.append(f[2])
     #st.text('\n'.join([i for i in st.session_state['logs'] if i[0].contains(st.session_state['search'])]))
+    st.session_state['search_results'] = numbers 
     st.write(filtered) 
 
 #2. Real-time Video
