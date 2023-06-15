@@ -19,9 +19,7 @@ from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
 from nltk.corpus import stopwords
 from transformers import pipeline
-keyreader = open("apikey.txt", 'r') 
-openai_key = keyreader.readline().strip() 
-keyreader.close
+openai_key = open("apikey.txt", 'r').readline().strip() 
 from datetime import timedelta
 import os
 
@@ -251,12 +249,12 @@ def genSummary(captions):
     c = len(request) 
     general_summary = res 
 	
-    if len(sus_frames) == 0: 
+    if len(st.session_state['search_results']) == 0: 
         return (general_summary, "") 
 
     # now, you want it to focus on the suspicious ones 
     request = "Focus on the following frames in which suspicious events may have occurred. Group frames close to each other as the same activity;\nFrames " # global variable sus_frames = [] 
-    for i in sus_frames: 
+    for i in st.session_state['search_results']: 
         request += str(i) + ', ' 
     sus_summary = post_request(request, context) 
 	
