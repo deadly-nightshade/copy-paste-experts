@@ -410,9 +410,7 @@ def susList():
 def playVideoPage(): 
 
     #1.C. Display Summary + summary timestamp video
-    print("111111111111111111111111111111111111111")
     tempSummTimestamps = susList() 
-    print("222222222222222222222222222222222222222")
     tempSumm = genSummary([i[0] for i in st.session_state['logs']], tempSummTimestamps) #this should be a string
     #tempSummTimestamps = st.session_state['search_results'] #this should be an array
     st.header("Summary")
