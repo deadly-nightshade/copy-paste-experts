@@ -150,22 +150,24 @@ def getVectorizer():
 print("Loading complete!") 
 
 #define function to get word similarities 
-@st.cache_data(persist=True, show_spinner=False)
+#@st.cache_data(persist=True, show_spinner=False)
 def word_similarities(target_word):
     distances = [] 
-    for v in values:
+    for v in loadValues():
         distances.append(vectorizer.similarity(target_word, v)) 
     #distances = vectorizer.distances(target_word, values) #ordered based on orders of vocabulary it seems
     #return (distances-np.min(distances))/(np.max(distances)-np.min(distances))
     return distances 
 
 #function to test this 
-@st.cache_data(persist=True, show_spinner=False)
+#@st.cache_data(persist=True, show_spinner=False)
 def sussometer(text, threshold=st.session_state['sussometer_threshold']): #threshold is required similarity to count 
+    print("Sussometer hehe")
     global training
     global data
     global freqs
     t = filtertext(text)
+    print(t)
     count = 0 
     #print(t)
     for inword in t:
@@ -188,6 +190,7 @@ def sussometer(text, threshold=st.session_state['sussometer_threshold']): #thres
             #word doesn't exist
             pass
     
+    print("Sus value:", count)
     return count 
 
 # (5) define function to generate a summary of the video; summarize every sussy period, and summarize unsussy part 
@@ -459,6 +462,15 @@ def updateVideo():
         img = Image.fromarray(img[0]) 
         st.image(img) 
 
+def word_sentence_similarities(target_word, sentence, threshold):
+    for word in sentence:
+        print("word sentence similarities:", target_word, word)
+        if (vectorizer.similarity(target_word, word) >= threshold): 
+            return True  
+    #distances = vectorizer.distances(target_word, values) #ordered based on orders of vocabulary it seems
+    #return (distances-np.min(distances))/(np.max(distances)-np.min(distances))
+    return False 
+
 def updateSearch(): 
     st.session_state['search_res_display'].empty() 
     with st.session_state['search_res_display']: 
@@ -467,7 +479,7 @@ def updateSearch():
         for f in st.session_state['logs']: 
             matched = False 
             for word in st.session_state['search'].split(): 
-                if word_similarities(word, f[0], st.session_state['similarity_threshold']): 
+                if word_sentence_similarities(word, f[0], st.session_state['similarity_threshold']): 
                     matched = True 
                     break 
             if matched and (sussometer(f[0], st.session_state['sussometer_threshold']) > 0): 
