@@ -51,6 +51,8 @@ if 'search' not in st.session_state:
     st.session_state['search'] = 1 
 if 'sussometer_threshold' not in st.session_state: 
     st.session_state['sussometer_threshold'] = 0.5 
+if 'search_results' not in st.session_state: 
+    st.session_state['search_results'] = [] 
 #os.environ['TRANSFORMERS_OFFLINE'] = 'yes'
 
 #BACKEND STUFF ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -220,6 +222,41 @@ def get_timestamp_from_seconds(sec):
     td = timedelta(seconds=sec)
     return str(timedelta(seconds=sec))
 
+def genSummary(captions):
+	context = "You are generating a summary of a video given a list of captions. In your reply, only state the summary and nothing else, revising it with each new prompt if required" 
+	request = "Create a brief summary in chronological order of this list of captions:\n"
+	c = len(request) 
+	incr = 0 
+	i = 0 
+	res = "" 
+	while (i < len(captions)):
+		while (i < len(captions)):
+			incr = len(captions[i] + "\n") 
+			if (c+incr) > 1000: 
+				break 
+			request += captions[i] + '\n' 
+			c += incr 
+			i+=1
+			
+		# post the request 
+		res = post_request(request, context) 
+		
+		request = "Continuing the list of captions:\n"
+		c = len(request) 
+	general_summary = res 
+	
+	if len(st.session_state['search_results']) == 0: 
+		return (general_summary, "") 
+	
+	# now, you want it to focus on the suspicious ones 
+	request = "Focus on the following frames in which suspicious events may have occurred. Group frames close to each other as the same activity;\nFrames " # global variable sus_frames = [] 
+	for i in st.session_state['search_results']: 
+		request += str(i) + ', ' 
+	sus_summary = post_request(request, context) 
+	
+	return (general_summary, sus_summary) 
+	
+
 
 # FRONTEND STUFF -----------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -230,11 +267,6 @@ vectorizer = getVectorizer()
 #for the lists later: no. of blanks is number of topics because yes. Each topic is assigned a certain "id". 
 letters = ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z']
 values = loadValues() 
-
-#display everything 
-
-video_type = st.sidebar.selectbox("Choose footage input mode", ["Upload footage", "Real-time footage"])
-
 
 #1. Upload Video
 
@@ -331,8 +363,8 @@ def playVideoPage():
 
     #1.C. Display Summary + summary timestamp video
 
-    tempSumm = Summary #this should be a string
-    tempSummTimestamps = SummaryTimestamps #this should be an array
+    tempSumm = genSummary(st.session_state['img_caption_frames']) #this should be a string
+    tempSummTimestamps = st.session_state['search_results'] #this should be an array
     st.header("Summary")
     st.write(tempSumm)
     st.header("Suspicious occurences timestamps")
@@ -364,56 +396,18 @@ def updateVideo():
 
 def updateSearch(): 
     filtered = [] 
+    numbers = [] 
     for f in st.session_state['logs']: 
         if (st.session_state['search'] in f[0]) and (sussometer(f[0], st.session_state['sussometer_threshold']) > 0): 
             filtered.append(f) 
+            numbers.append(f[2])
     #st.text('\n'.join([i for i in st.session_state['logs'] if i[0].contains(st.session_state['search'])]))
+    st.session_state['search_results'] = numbers 
     st.write(filtered) 
-
-#2. Real-time Video
-
-def realtime_page():
-
-    #imports
-    import streamlit as st
-    import pandas as pd
-    import altair as alt
-
-    #2.A. Title
-    st.title("Real-time surveillance footage")
-
-    #2.B. Real-time video access feature? (bluetooth?, wifi?)
-    if st.button("Connect real-time video feed"):
-        st.write("")
-        #st.write is just placeholder.
-        #Here we add the connection method and stuff
-
-    #2.C. Suspicion Alert System
-    if sussometrics: #sussometrics is a bool that is true when something sus occurring
-        tempSumm = RTsummary #string of summary of what happened using captions at those few frames
-        st.warning(str("Something sussy!\n"+tempSumm))
-
-    #2.D. Display timestamps + timestamp video
-    RTtempSumm = RTSummary #this should be a string
-    RTtempSummTimestamps = RTSummaryTimestamps #this should be an array
-    st.header("Summary")
-    st.write(RTtempSumm)
-    st.header("Suspicious occurences timestamps")
-    for i in range(len(RTtempSummTimestamps)):
-        st.write(RTtempSummTimestamps[i])
-        #show video feed that starts 5 seconds b4 timestamp, and show brief summary of captions within the timeframe of plus-minus 10 seconds from timestamp
-
-
-    #2.E Display real time video feed
-    #yes.
-
 
 
 with main_col: 
-    if video_type=="Upload footage":
-        upload_page()
-    else:
-        realtime_page()
+    upload_page()
 with search_col: 
     load_searchbar() 
 
