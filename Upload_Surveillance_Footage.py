@@ -351,7 +351,7 @@ def upload_page():
         for caption_frame in st.session_state['img_caption_frames']: 
             # TODO show progress bar!
 
-            PIL_image = Image.fromarray(caption_frame[0])
+            PIL_image = Image.fromarray(cv2.cvtColor(caption_frame[0], cv2.COLOR_BGR2RGB))
             caption = image_to_caption(PIL_image, blip_model) 
             print(caption)
             st.session_state['captions'].append(caption) 
@@ -454,7 +454,7 @@ def updateVideo():
     with st.session_state['videoplayer']: 
         img  = st.session_state['img_caption_frames'][st.session_state['current_video_time']]
         print(img)
-        img = Image.fromarray(img[0]) 
+        img = Image.fromarray(cv2.cvtColor(img[0], cv2.COLOR_BGR2RGB))
         st.image(img) 
 
 def updateSearch(): 
