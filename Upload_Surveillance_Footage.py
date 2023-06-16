@@ -82,6 +82,7 @@ def getVideoFrames(_vid, targetfps=1):
             break
         if (counter >= fps): 
             imgs.append([img, c]) 
+            c += 1 
             counter -= fps 
         counter += targetfps 
     return imgs
@@ -177,7 +178,7 @@ def sussometer(text, threshold=st.session_state['sussometer_threshold']): #thres
     for inword in t:
         try:
             scores = word_similarities(inword)
-            print(inword, scores)
+            #print(inword, scores)
             #print(inword)
             #print(scores) 
             c = 0 #count
@@ -460,7 +461,7 @@ def load_searchbar():
     st.session_state['similarity_threshold'] = st.slider("Similarity threshold (1 is exact match)", 0.0, 1.0, 0.6)
 
     if 'search_res_display' not in st.session_state: 
-        st.session_state['search_res_display'] = st.empty() 
+        st.session_state['search_res_display'] = st.container() 
     
     #do filter thingy 
     updateSearch() 
@@ -490,21 +491,31 @@ def word_sentence_similarities(target_word, sentence, threshold):
 
 def updateSearch(): 
     st.session_state['search_res_display'].empty() 
+    filtered = [] 
+    numbers = [] 
+    for f in st.session_state['logs']: 
+        matched = False 
+        for word in st.session_state['search'].split(): 
+            if word_sentence_similarities(word, f[0], st.session_state['similarity_threshold']): 
+                matched = True 
+                break 
+        if matched and (sussometer(f[0], st.session_state['sussometer_threshold']) > 0): 
+            filtered.append(f) 
+            numbers.append(f[2])
+    #st.text('\n'.join([i for i in st.session_state['logs'] if i[0].contains(st.session_state['search'])]))
+    st.session_state['search_results'] = numbers 
+    #res = "" 
+    logs = []
+    if st.session_state["uploaded_file"] is not None:
+        logs = generateLogs(st.session_state['logs'], st.session_state["uploaded_file"], st.session_state["targetfps"]).split('\n') 
+    
     with st.session_state['search_res_display']: 
-        filtered = [] 
-        numbers = [] 
-        for f in st.session_state['logs']: 
-            matched = False 
-            for word in st.session_state['search'].split(): 
-                if word_sentence_similarities(word, f[0], st.session_state['similarity_threshold']): 
-                    matched = True 
-                    break 
-            if matched and (sussometer(f[0], st.session_state['sussometer_threshold']) > 0): 
-                filtered.append(f) 
-                numbers.append(f[2])
-        #st.text('\n'.join([i for i in st.session_state['logs'] if i[0].contains(st.session_state['search'])]))
-        st.session_state['search_results'] = numbers 
-        st.write(filtered) 
+        res = "<p>"
+        for i in numbers: 
+            #res += logs[i+1] +'\n' 
+            res += (logs[i+1]) + '<br>' 
+        res += "</p>" 
+        st.markdown(res, unsafe_allow_html=True)
 
 
 with main_col: 
