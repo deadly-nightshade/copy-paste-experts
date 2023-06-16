@@ -1,7 +1,0 @@
-WIN_20230615_18_55_58_Pro.mp4, 0:00:02 , FPS used: 1
-Frame 0 0:00:00  there is a man with glasses and a blue shirt in a room
-Frame 1 0:00:01  there is a man with glasses making a face with his hands
-Frame 2 0:00:02  there is a man with glasses making a face and hands
-Frame 0 0:00:00  there is a man with glasses and a blue shirt in a room
-Frame 1 0:00:01  there is a man with glasses making a face with his hands
-Frame 2 0:00:02  there is a man with glasses making a face and hands
