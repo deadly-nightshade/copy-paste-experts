@@ -54,6 +54,12 @@ if 'search_results' not in st.session_state:
     st.session_state['search_results'] = [] 
 if 'video_filename' not in st.session_state:
     st.session_state['video_filename'] = ""
+if 'generated_summary' not in st.session_state:
+    st.session_state['generated_summary'] = ""
+if 'suspicious_timestamps' not in st.session_state:
+    st.session_state['suspicious_timestamps'] = ""
+if 'downloaded_logs' not in st.session_state:
+    st.session_state['downloaded_logs'] = ""
 #os.environ['TRANSFORMERS_OFFLINE'] = 'yes'
 
 #BACKEND STUFF ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -339,8 +345,32 @@ def upload_page():
         # DO SOMETHING TO VIDEO
 
         if uploaded_file.name == st.session_state["video_filename"]:
-            generateDownloadButton()
-            displaySummary()
+            # Generate download button
+            # text_file_name = st.session_state['uploaded_file'].name + ".txt"
+
+            text_file_name = st.session_state['video_filename'] + ".txt"
+            with open(text_file_name, 'w') as text_file:
+                text_file.write(st.session_state['downloaded_logs'])
+
+            st.download_button( 
+                label="Download the generated logs file as a txt",
+                data = open(text_file_name, 'r'),
+                file_name=text_file_name,
+                mime='text/txt',
+             )            
+
+
+
+            # displayed Summary
+            st.header("Summary")
+            st.write(st.session_state['generated_summary'][0])
+            st.write("Note the following frame(s) in which suspicious activities have occured:\n")
+            st.write(st.session_state['generated_summary'][1])
+            st.header("Suspicious occurences timestamps")
+            for i in st.session_state['suspicious_timestamps']:
+                st.text(st.session_state['logs'][i-1])
+                #show video feed that starts 5 seconds b4 timestamp, and show brief summary of captions within the timeframe of plus-minus 10 seconds from timestamp
+
             playVideoPage()
         else:
 
@@ -404,6 +434,7 @@ def generateDownloadButton():
     # (4.1) Generate Logs
     logs = generateLogs(st.session_state['logs'], st.session_state['uploaded_file'], st.session_state['targetfps'])
     st.text(logs)
+    st.session_state['downloaded_logs'] = logs
 
     print(st.session_state['logs'])
 
@@ -428,6 +459,8 @@ def displaySummary():
     tempSummTimestamps = susList() 
     print("222222222222222222222222222222222222222")
     tempSumm = genSummary([i[0] for i in st.session_state['logs']], tempSummTimestamps) #this should be a string
+    st.session_state['generated_summary'] = tempSumm
+    st.session_state['suspicious_timestamps'] = tempSummTimestamps
 
     #tempSummTimestamps = st.session_state['search_results'] #this should be an array
     st.header("Summary")
@@ -461,7 +494,7 @@ def load_searchbar():
     st.session_state['similarity_threshold'] = st.slider("Similarity threshold (1 is exact match)", 0.0, 1.0, 0.6)
 
     if 'search_res_display' not in st.session_state: 
-        st.session_state['search_res_display'] = st.container() 
+        st.session_state['search_res_display'] = st.empty() 
     
     #do filter thingy 
     updateSearch() 
@@ -512,7 +545,6 @@ def updateSearch():
     with st.session_state['search_res_display']: 
         res = "<p>"
         for i in numbers: 
-            #res += logs[i+1] +'\n' 
             res += (logs[i+1]) + '<br>' 
         res += "</p>" 
         st.markdown(res, unsafe_allow_html=True)
